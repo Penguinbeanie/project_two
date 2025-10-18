@@ -12,10 +12,13 @@ yesterday_str = yesterday_date_obj.strftime("%Y-%m-%d")
 today_file = today_date_obj.strftime("%Y_%m_%d")
 
 # Extracting Tickers
-df = pd.read_csv("sp500_components.csv")
+df_500 = pd.read_csv("sp500_components.csv")
+df_600 = pd.read_csv("sp600_components.csv")
+
+df_comb = pd.concat([df_500.iloc[:, 0], df_600.iloc[:, 0]])
 
 # --- Configuration ---
-TICKERS = df.iloc[:, 0].tolist()
+TICKERS = df_comb.tolist()
 START_DATE = yesterday_str
 END_DATE = today_str  # The current date, to get the latest data
 OUTPUT_FILE = f"{today_file}_daily_stock_data_long_format.csv"
