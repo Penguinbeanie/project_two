@@ -1,0 +1,98 @@
+### 1. The `dags` Directory: The Project's Conductor
+
+This is the heart of the Airflow setup. Python scripts that define data pipelines (DAGs) are placed here. Airflow automatically detects and loads any Python file in this directory as a potential DAG.
+
+**Python File Location:**
+
+While data processing scripts (e.g., `daily_yfinance.py`) can be placed directly in the `dags` folder, it is better practice to organize them. A `scripts` folder should be created inside `dags` for the data extraction and transformation logic.
+
+**Example Workflow:**
+
+1.  A `scripts` folder is created: `Project_2/Docker/dags/scripts/`
+2.  The business logic is placed there: `Project_2/Docker/dags/scripts/daily_yfinance.py`
+3.  A DAG file is created in the main `dags` folder (`Project_2/Docker/dags/`) to call the script.
+
+Here is an example of what a DAG file named `daily_stock_pipeline.py` might look like:
+
+```python
+from __future__ import annotations
+
+import pendulum
+
+from airflow.models.dag import DAG
+from airflow.operators.bash import BashOperator
+
+with DAG(
+    dag_id="daily_stock_pipeline",
+    start_date=pendulum.datetime(2025, 10, 19, tz="UTC"),
+    schedule_interval="@daily",
+    catchup=False,
+) as dag:
+    extract_data = BashOperator(
+        task_id="extract_daily_stock_data",
+        bash_command="python /opt/airflow/dags/scripts/daily_yfinance.py",
+    )
+
+    transform_data = BashOperator(
+        task_id="transform_data_to_csvs",
+        bash_command="python /opt/airflow/dags/scripts/transform_to_csvs.py",
+    )
+
+    load_data_to_clickhouse = BashOperator(
+        task_id="load_data_to_clickhouse",
+        bash_command="python /opt/airflow/dags/scripts/load_to_clickhouse.py",
+    )
+
+    extract_data >> transform_data >> load_data_to_clickhouse
+```
+
+In this example, the DAG defines three steps, and each step executes a Python script using a `BashOperator`.
+
+### 2. The `data` Directory: The Project's Staging Area
+
+This directory is mounted into the Airflow containers at `/opt/airflow/data`. It is the designated place for scripts to read from and write to.
+
+**Example Workflow:**
+
+1.  The `daily_yfinance.py` script runs and fetches raw stock data, saving it as a JSON or CSV file in `/opt/airflow/data/`.
+2.  The `transform_to_csvs.py` script then reads that raw data file from `/opt/airflow/data/`, processes it, and saves the final, cleaned CSVs (matching the `FactStockPrice`, `DimCompany` tables, etc.) back into the same `/opt/airflow/data/` directory.
+3.  Finally, the `load_to_clickhouse.py` script reads these final CSVs from `/opt/airflow/data/` and loads them into the ClickHouse database.
+
+### 3. The `clickhouse_init` Directory: Setting Up The Database
+
+This directory is used to initialize the ClickHouse database the very first time the services are started. Any `.sh` or `.sql` file placed in here will be executed.
+
+**Example:**
+
+A `create_tables.sql` file would be placed in `Project_2/Docker/clickhouse_init/`. It would look something like this (using ClickHouse-specific syntax):
+
+```sql
+CREATE TABLE IF NOT EXISTS stocks.DimDate (
+    DateID Int32,
+    FullDate Date,
+    -- ... other columns
+) ENGINE = MergeTree()
+PRIMARY KEY (DateID);
+
+CREATE TABLE IF NOT EXISTS stocks.DimCompany (
+    CompanyID Int32,
+    Symbol String,
+    -- ... other columns
+) ENGINE = MergeTree()
+PRIMARY KEY (CompanyID);
+
+-- ... and so on for other tables
+```
+
+When `docker-compose up -d` is run for the first time, ClickHouse will start and automatically run this script, creating the `stocks` database and all its tables.
+
+### Summary of the Full Workflow
+
+1.  **Setup:** The table creation SQL is placed in `clickhouse_init`, extraction/transformation scripts in `dags/scripts`, and the DAG definition in `dags`.
+2.  **Launch:** `docker-compose up -d` is run from the `Project_2/Docker` directory.
+3.  **Initialization:** ClickHouse creates the database and tables. Airflow starts, creates its user, and loads the DAG.
+4.  **Execution:** The DAG can be enabled and triggered from the Airflow UI at `http://localhost:8080` (login with `airflow`/`airflow`).
+5.  **Data Flow:**
+    *   The DAG runs the `daily_yfinance.py` script, which saves raw data to the `data` directory.
+    *   The next task runs, transforming the raw data and saving final CSVs to the `data` directory.
+    *   The final task runs, reading the CSVs from the `data` directory and inserting them into the ClickHouse tables.
