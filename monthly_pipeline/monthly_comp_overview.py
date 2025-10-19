@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import date
 
 # Extracting current date
-today_date = date.today().strftime("%Y-%m-%d")
+today_date = date.today().strftime("%Y_%m_%d")
 
 # Extracting Tickers
 df_500 = pd.read_csv("sp500_components.csv")
@@ -11,9 +11,10 @@ df_600 = pd.read_csv("sp600_components.csv")
 
 df_comb = pd.concat([df_500.iloc[:, 0], df_600.iloc[:, 0]])
 
+
 # --- Configuration ---
 TICKERS = df_comb.tolist()
-OUTPUT_FILE = f"test_{today_date}_dimensional_data.csv"
+OUTPUT_FILE = f"{today_date}_dimensional_data.csv"
 
 # This list will hold the dictionary for each ticker's dimensions
 all_dimensions_data = []
