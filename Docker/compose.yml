@@ -16,7 +16,9 @@ services:
       - CLICKHOUSE_PASSWORD=password
 
   airflow-webserver:
-    image: apache/airflow:2.8.1
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: airflow-webserver
     command: webserver
     ports:
@@ -25,6 +27,7 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./data:/opt/airflow/data
+      - ./airflow_db:/opt/airflow
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
@@ -35,13 +38,16 @@ services:
       - airflow-init
 
   airflow-scheduler:
-    image: apache/airflow:2.8.1
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: airflow-scheduler
     command: scheduler
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./data:/opt/airflow/data
+      - ./airflow_db:/opt/airflow
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
@@ -51,7 +57,9 @@ services:
       - airflow-init
 
   airflow-init:
-    image: apache/airflow:2.8.1
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: airflow-init
     entrypoint: /bin/bash
     command:
@@ -64,14 +72,17 @@ services:
           --firstname Admin \
           --lastname User \
           --role Admin \
-          --email admin@example.com
+          --email admin@example.com || true
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
+      - ./airflow_db:/opt/airflow
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
+    restart: on-failure
 
 volumes:
   clickhouse_data:
+  airflow_db:
