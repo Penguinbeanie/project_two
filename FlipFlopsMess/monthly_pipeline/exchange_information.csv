@@ -1,0 +1,7 @@
+Exchange Code,Associated Exchange/Market,Company Size Focus,US Exchange Type
+NYQ,New York Stock Exchange (NYSE),Large/Mid Cap,Major Exchange
+NGM,NASDAQ Global Market,Mid-to-Large Cap,NASDAQ Tier (Main)
+NMS,NASDAQ Global Market / Global Select Market,Mid-to-Large Cap (Historical Code),NASDAQ Tier (Main)
+NCM,NASDAQ Capital Market,Small Cap,NASDAQ Tier (Entry-Level)
+ASE,NYSE American (formerly AMEX),Small-to-Mid Cap,NYSE Group Exchange
+BTS,"Cboe BATS / Alternative Trading Venue",All (Often Secondary Trade Location),Alternative Trading System (ATS)

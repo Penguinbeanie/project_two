@@ -1,0 +1,27 @@
+Stock exchange,MIC,Region,City,Market cap (USD tn),Monthly trade volume (USD bn),Time zone,Δ,DST,Open hours (local time) (Open),Open hours (local time) (Close),Open hours (local time) (Lunch),"UTC, winter only (Open)","UTC, winter only (Close)"
+New York Stock Exchange,XNYS,United States,New York City,30.92[4],2685,EST/EDT,−5:00,Mar–Nov,09:30,16:00,No,14:30,21:00
+Nasdaq (US),XNAS,United States,New York City,31.96[5],2727,EST/EDT,−5:00,Mar–Nov,09:30,16:00,No,14:30,21:00
+Shanghai Stock Exchange,XSHG,China,Shanghai,7.96[6],1906,CST,+8:00,,09:30,15:00,11:30–13:00,01:30,07:00
+Japan Exchange Group (Tokyo Stock Exchange),XJPX (TYO),Japan,Tokyo,7.06[7],652,JST,+9:00,,09:00,15:00,11:30–12:30,00:00,06:00
+Euronext,XAMS XBRU XMSM XLIS XMIL XOSL XPAR,Europe,Amsterdam Brussels Dublin Lisbon Milan Oslo Paris,6.85[8],186,CET/CEST,+1:00,Mar–Oct,09:00,17:30,No,08:00,16:30
+Hong Kong Stock Exchange,XHKG,Hong Kong,Hong Kong,5.72[9],762,HKT,+8:00,,09:30,16:00,12:00–13:00,01:30,08:00
+Bombay Stock Exchange,XBSE,India,Mumbai,5.25[10],501,IST,+5:30,,09:15,15:30,No,03:45,10:00
+National Stock Exchange,XNSE,India,Mumbai,5.22[11],294,IST,+5:30,,09:15,15:30,No,03:45,10:00
+Shenzhen Stock Exchange,XSHE,China,Shenzhen,5.11[12],2888,CST,+8:00,,09:30,15:00,11:30–13:00,01:30,07:00
+Toronto Stock Exchange,XTSE,Canada,Toronto,4.00[13],206,EST/EDT,−5:00,Mar–Nov,09:30,16:00,No,14:30,21:00
+London Stock Exchange,XLON,United Kingdom,London,3.14[14],219,GMT/BST,+0:00,Mar–Oct,08:00,16:30,No,08:00,16:30
+Saudi Exchange,XSAU,Saudi Arabia,Riyadh,2.73,32,AST,+3:00,,10:00,15:00,No,07:00,12:00
+Taiwan Stock Exchange,XTAI,Taiwan,Taipei,2.26,222,NST (Taiwan),+8:00,,09:00,13:30,No,01:00,05:30
+German Stock Exchange (Deutsche Börse AG),XFRA,Germany,Frankfurt,2.04,77,CET/CEST,+1:00,Mar–Oct,08:00 (Eurex) 08:00 (floor) 09:00 (Xetra),22:00 (Eurex) 20:00 (floor) 17:30 (Xetra),No,07:00,21:00
+Tehran Stock Exchange,XTEH,Iran,Tehran,2.00,39,IRST,+3:30,,09:00,12:30,No,05:30,09:00
+SIX Swiss Exchange,XSWX,Switzerland,Zürich,1.97,54,CET/CEST,+1:00,Mar–Oct,09:00,17:30,No,08:00,16:30
+Australian Securities Exchange,XASX,Australia,Sydney,1.89,91,AEST/AEDT,+10:00,Oct–Apr,10:00,16:00,No,00:00,06:00
+Nasdaq Nordic and Baltic Exchanges,Nasdaq Nordic and Baltic Exchanges,Europe,Europe,1.79,47,,,,,,,,
+Copenhagen Stock Exchange,XCSE,Denmark,Copenhagen,1.79,47,CET/CEST,+1:00,Mar–Oct,09:00,17:00,,08:00,16:00
+Stockholm Stock Exchange,XSTO,Sweden,Stockholm,1.79,47,CET/CEST,+1:00,Mar–Oct,09:00,17:30,,08:00,16:30
+Helsinki Stock Exchange,XHEL,Finland,Helsinki,1.79,47,EET/EEST,+2:00,Mar–Oct,10:00,18:30,,08:00,16:30
+Tallinn Stock Exchange,XTAL,Estonia,Tallinn,1.79,47,EET/EEST,+2:00,Mar–Oct,10:00,16:00,,08:00,14:00
+Riga Stock Exchange,XRIS,Latvia,Riga,1.79,47,EET/EEST,+2:00,Mar–Oct,10:00,16:00,,08:00,14:00
+Vilnius Stock Exchange,XLIT,Lithuania,Vilnius,1.79,47,EET/EEST,+2:00,Mar–Oct,10:00,16:00,,08:00,14:00
+Iceland Stock Exchange,XICE,Iceland,Reykjavík,1.79,47,GMT,+0:00,,09:30,15:30,,09:30,15:30
+Korea Exchange,XKOS,South Korea,Seoul Busan,1.56,204,KST,+9:00,,09:00,15:30,No,00:00,06:30
