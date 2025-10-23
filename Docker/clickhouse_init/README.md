@@ -6,17 +6,17 @@ docker exec -it clickhouse clickhouse-client \
     --multiquery \
     --queries-file=/docker-entrypoint-initdb.d/sql/create_db_and_tables.sql
 ```
-
-docker exec -it clickhouse clickhouse-client --password password --query "SELECT * FROM sp600_stocks.daily_stock_data LIMIT 10"
-
-docker exec -it clickhouse clickhouse-client --password password --query "SELECT * FROM sp600_stocks.company_details LIMIT 10"
-
-docker exec -it clickhouse clickhouse-client --password password --query "SELECT * FROM sp600_stocks.sp600 LIMIT 10"
-
-docker exec -it clickhouse clickhouse-client --password password --query "SELECT * FROM sp600_stocks.sp500 LIMIT 10"
-
-docker exec -it clickhouse clickhouse-client --password password --query "SELECT * FROM sp600_stocks.exchanges LIMIT 10"
-
-docker exec -it clickhouse clickhouse-client --password password --query "SELECT * FROM sp600_stocks.before202510_stock_data LIMIT 10"
+### 2. Load Initial Data
+Execute the SQL script to load queries/data:
+```bash
+docker exec -it clickhouse clickhouse-client \
+    --multiquery \
+    --queries-file=/docker-entrypoint-initdb.d/sql/load_queries.sql
+```
+### 3.Connect to the Client: To start an interactive SQL session, run:
+ ```bash
+ docker exec -it clickhouse clickhouse-client
+ ```
+You should see a prompt like `clickhouse-server :)`. You are now ready to run queries!
 
 
