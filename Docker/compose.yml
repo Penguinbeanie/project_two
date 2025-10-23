@@ -24,9 +24,11 @@ services:
     ports:
       - "8123:8123"
       - "9000:9000"
+    # I added some volumes to insert the data -Danni
     volumes:
-      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_data:/var/lib/clickhouse            
       - ./clickhouse_init:/docker-entrypoint-initdb.d
+      - ./data:/var/lib/clickhouse/user_files
     environment:
       CLICKHOUSE_DB: stocks
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
