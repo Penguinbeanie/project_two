@@ -19,5 +19,8 @@ docker exec -it clickhouse clickhouse-client \
  ```
 You should see a prompt like `clickhouse-server :)`. You are now ready to run queries!
 
-Some comments: I added two lines in the compose file, in order to insert the data. For saving time, I only inserted 10 rows per dataset.
+## Some comments: 
+## 1. I added two lines in the compose file to insert data. 
+## 2. For saving time, I only inserted 10 rows per dataset. If you will to insert more plz remove LIMIT 10 in load_queries.sql.
+
 
