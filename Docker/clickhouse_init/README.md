@@ -19,12 +19,12 @@ You should see a prompt like `clickhouse-server :)`. You are now ready to run qu
 #### 1. ClickHouse Database
 - Database: sp600_stocks
 - Tables Created:
-daily_stock_data - Daily stock prices (date, ticker, OHLC, volume)\ 
-sp600 - S&P 600 small-cap components\ 
-sp500 - S&P 500 components\ 
-company_details - Monthly company overview data\ 
-exchanges - Exchange information\ 
-before202510_stock_data - Historical stock data\ 
+- daily_stock_data - Daily stock prices (date, ticker, OHLC, volume) 
+- sp600 - S&P 600 small-cap components
+- sp500 - S&P 500 components
+- company_details - Monthly company overview data
+- exchanges - Exchange information 
+- before202510_stock_data - Historical stock data
 #### 2. Current Setup:
 - Ingestor runs **once** when container starts (there will be **duplicated data** every time when restart containet!!)
 - how to fix it?
@@ -45,6 +45,7 @@ Now restart:
 ```bash
 docker-compose restart ingestor
 ```
+
 
 
 
