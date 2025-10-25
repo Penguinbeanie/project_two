@@ -47,9 +47,6 @@ You should see a prompt like `clickhouse-server :)`. You are now ready to run qu
 
 #### 🔧 Solutions
 
-```bash
-docker exec -it clickhouse clickhouse-client --password password
-```
 In ClickHouse:
 ```bash
 TRUNCATE TABLE sp600_stocks.daily_stock_data;
@@ -63,6 +60,7 @@ Now restart:
 ```bash
 docker-compose restart ingestor
 ```
+
 
 
 
