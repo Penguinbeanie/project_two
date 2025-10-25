@@ -1,0 +1,99 @@
+version: "3.9"
+
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment: &airflow-environment
+    AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth
+    AIRFLOW_CONN_CLICKHOUSE_DEFAULT: "clickhouse://default:password@clickhouse:9000/stocks"
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./data:/opt/airflow/data
+    - airflow_internal:/opt/airflow
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.8
+    container_name: clickhouse
+    restart: unless-stopped
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./clickhouse_init:/docker-entrypoint-initdb.d
+      - ./data:/var/lib/clickhouse/user_files
+    environment:
+      CLICKHOUSE_DB: sp600_stocks
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+      CLICKHOUSE_PASSWORD: password
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "clickhouse-client",
+          "--password",
+          "password",
+          "--query",
+          "SELECT 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ingestor-daily:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingestor.daily
+    container_name: ingestor-daily
+    restart: "no"  # Don't restart after completion
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    working_dir: /opt/scripts
+    volumes:
+      - ./data:/var/lib/clickhouse/user_files
+
+  ingestor-monthly:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingestor.monthly
+    container_name: ingestor-monthly
+    restart: "no"  # Don't restart after completion
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    working_dir: /opt/scripts
+    volumes:
+      - ./data:/var/lib/clickhouse/user_files
+  
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: airflow-webserver
+    restart: unless-stopped
+    command: >
+      bash -c "airflow db migrate &&
+      airflow users create --username airflow --password airflow --firstname Admin --lastname User --role Admin --email admin@example.com || true &&
+      airflow webserver"
+    ports:
+      - "8080:8080"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow-scheduler
+    restart: unless-stopped
+    command: airflow scheduler
+    depends_on:
+      - airflow-webserver
+
+volumes:
+  clickhouse_data:
+  airflow_internal:
