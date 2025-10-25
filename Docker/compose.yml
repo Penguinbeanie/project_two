@@ -27,7 +27,7 @@ services:
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./clickhouse_init:/docker-entrypoint-initdb.d
-      - ./data:/var/lib/clickhouse/user_files
+      - ./data:/var/lib/clickhouse/user_files   #updated for loading data
     environment:
       CLICKHOUSE_DB: sp600_stocks
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
@@ -45,7 +45,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
+# added ingestor
   ingestor:
     build:
       context: .
@@ -83,4 +83,5 @@ services:
 
 volumes:
   clickhouse_data:
+
   airflow_internal:
