@@ -15,20 +15,38 @@ docker exec -it clickhouse clickhouse-client --multiquery --queries-file=/docker
  ```
 You should see a prompt like `clickhouse-server :)`. You are now ready to run queries!
 
-### Some comments: 
-#### 1. ClickHouse Database
-- Database: sp600_stocks
-- Tables Created:
-- daily_stock_data - Daily stock prices (date, ticker, OHLC, volume) 
-- sp600 - S&P 600 small-cap components
-- sp500 - S&P 500 components
-- company_details - Monthly company overview data
-- exchanges - Exchange information 
-- before202510_stock_data - Historical stock data
-#### 2. Current Setup:
-- I builded **two ingestors** monthly and daily, both run **once** when container starts (there will be **duplicated data** every time when restart containet!!)
-- how to fix it?
-- Before restarting, truncate tables
+## Comments
+
+### 1. ClickHouse Database
+
+**Database:** `sp600_stocks`
+
+**Tables:**
+
+| Table Name | Description |
+|------------|-------------|
+| `daily_stock_data` | Daily stock prices |
+| `sp600` | S&P 600 small-cap components |
+| `sp500` | S&P 500 components |
+| `company_details` | Monthly company overview data |
+| `exchanges` | Exchange information |
+| `before202510_stock_data` | Historical stock data (pre-Oct 2025) |
+
+---
+
+### 2. Current Setup & Known Issues
+
+#### Architecture
+- Built **two separate ingestors**: `ingestor-daily` and `ingestor-monthly`
+- Both run **once** when container starts (`restart: "no"`)
+
+#### ⚠️ Known Issue: Data Duplication
+**Problem:** Every time containers restart, data gets duplicated in tables.
+
+**Root Cause:** Ingestors use `INSERT` without checking for existing data.
+
+#### 🔧 Solutions
+
 ```bash
 docker exec -it clickhouse clickhouse-client --password password
 ```
@@ -45,6 +63,7 @@ Now restart:
 ```bash
 docker-compose restart ingestor
 ```
+
 
 
 
