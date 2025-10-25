@@ -26,7 +26,7 @@ You should see a prompt like `clickhouse-server :)`. You are now ready to run qu
 - exchanges - Exchange information 
 - before202510_stock_data - Historical stock data
 #### 2. Current Setup:
-- Ingestor runs **once** when container starts (there will be **duplicated data** every time when restart containet!!)
+- I builded **two ingestors** monthly and daily, both run **once** when container starts (there will be **duplicated data** every time when restart containet!!)
 - how to fix it?
 - Before restarting, truncate tables
 ```bash
@@ -45,6 +45,7 @@ Now restart:
 ```bash
 docker-compose restart ingestor
 ```
+
 
 
 
