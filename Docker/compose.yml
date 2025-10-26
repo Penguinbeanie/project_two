@@ -27,8 +27,9 @@ services:
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./clickhouse_init:/docker-entrypoint-initdb.d
+      - ./data:/var/lib/clickhouse/user_files
     environment:
-      CLICKHOUSE_DB: stocks
+      CLICKHOUSE_DB: sp600_stocks
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
       CLICKHOUSE_PASSWORD: password
     healthcheck:
@@ -45,6 +46,32 @@ services:
       timeout: 5s
       retries: 5
 
+  ingestor-daily:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingestor.daily
+    container_name: ingestor-daily
+    restart: "no"  # Don't restart after completion
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    working_dir: /opt/scripts
+    volumes:
+      - ./data:/var/lib/clickhouse/user_files
+
+  ingestor-monthly:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingestor.monthly
+    container_name: ingestor-monthly
+    restart: "no"  # Don't restart after completion
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    working_dir: /opt/scripts
+    volumes:
+      - ./data:/var/lib/clickhouse/user_files
+  
   airflow-webserver:
     <<: *airflow-common
     container_name: airflow-webserver
