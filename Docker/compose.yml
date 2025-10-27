@@ -1,5 +1,4 @@
 version: "3.9"
-
 x-airflow-common: &airflow-common
   build:
     context: .
@@ -9,7 +8,8 @@ x-airflow-common: &airflow-common
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth
-    AIRFLOW_CONN_CLICKHOUSE_DEFAULT: "clickhouse://default:password@clickhouse:9000/stocks"
+    # IMPORTANT: Update the user and password to match ClickHouse admin
+    AIRFLOW_CONN_CLICKHOUSE_DEFAULT: "clickhouse://airflow:password@clickhouse:9000/sp600_stocks"
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
@@ -31,47 +31,18 @@ services:
     environment:
       CLICKHOUSE_DB: sp600_stocks
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+      # Create 'airflow' as the primary admin user
+      CLICKHOUSE_USER: airflow
+      # Set the password for the 'airflow' user (and the 'default' user)
       CLICKHOUSE_PASSWORD: password
     healthcheck:
-      test:
-        [
-          "CMD",
-          "clickhouse-client",
-          "--password",
-          "password",
-          "--query",
-          "SELECT 1",
-        ]
+      # Healthcheck now uses the 'airflow' user to authenticate
+      test: ["CMD", "curl", "-f", "http://airflow:password@localhost:8123/ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 60s
 
-  ingestor-daily:
-    build:
-      context: .
-      dockerfile: Dockerfile.ingestor.daily
-    container_name: ingestor-daily
-    restart: "no"  # Don't restart after completion
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-    working_dir: /opt/scripts
-    volumes:
-      - ./data:/var/lib/clickhouse/user_files
-
-  ingestor-monthly:
-    build:
-      context: .
-      dockerfile: Dockerfile.ingestor.monthly
-    container_name: ingestor-monthly
-    restart: "no"  # Don't restart after completion
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-    working_dir: /opt/scripts
-    volumes:
-      - ./data:/var/lib/clickhouse/user_files
-  
   airflow-webserver:
     <<: *airflow-common
     container_name: airflow-webserver

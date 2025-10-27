@@ -1,23 +1,21 @@
-DROP DATABASE IF EXISTS sp600_stocks;
-CREATE DATABASE sp600_stocks;
-USE sp600_stocks;
+CREATE DATABASE IF NOT EXISTS sp600_stocks;
 
---daily tables
-CREATE TABLE daily_stock_data (
-date Date,
-ticker String,
-close Float64,
-high Float64,
-low Float64,
-open Float64,
-volume UInt64,
-ingestion_date Date DEFAULT today()
-) 
+-- daily tables
+CREATE TABLE IF NOT EXISTS sp600_stocks.daily_stock_data (
+    date Date,
+    ticker String,
+    close Float64,
+    high Float64,
+    low Float64,
+    open Float64,
+    volume UInt64,
+    ingestion_date Date DEFAULT today()
+)
 ENGINE = MergeTree()
 PARTITION BY toYYYYMM(date)
 ORDER BY (date, ticker);
 
-CREATE TABLE sp600(
+CREATE TABLE IF NOT EXISTS sp600_stocks.sp600 (
     symbol String,
     company String,
     gics_sector String,
@@ -28,31 +26,30 @@ CREATE TABLE sp600(
     ingestion_date Date DEFAULT today()
 )
 ENGINE = MergeTree()
-ORDER BY (symbol, gics_sector, headquarters_location);
+ORDER BY (symbol);
 
-CREATE TABLE sp500(
+CREATE TABLE IF NOT EXISTS sp600_stocks.sp500 (
     symbol String,
     security String,
     gics_sector String,
     gics_sub_industry String,
     headquarters_location String,
-    date_added Date32,
+    date_added Date,
     cik String,
     founded String,
     ingestion_date Date DEFAULT today()
 )
 ENGINE = MergeTree()
-ORDER BY (symbol, gics_sector, headquarters_location);
+ORDER BY (symbol);
 
---monthly tables
-
-CREATE TABLE company_details(
+-- Monthly tables
+CREATE TABLE IF NOT EXISTS sp600_stocks.company_details (
     symbol String,
     company_name String,
     sector String,
     industry String,
     headquarters_country String,
-    currency_code FixedString(3),
+    currency_code String,
     company_summary String,
     employee_count UInt32,
     website_url String,
@@ -61,9 +58,9 @@ CREATE TABLE company_details(
     ingestion_date Date DEFAULT today()
 )
 ENGINE = MergeTree()
-ORDER BY (symbol, sector, headquarters_country, currency_code);
+ORDER BY (symbol);
 
-CREATE TABLE exchanges(
+CREATE TABLE IF NOT EXISTS sp600_stocks.exchanges (
     stock_exchange String,
     mic String,
     region String,
@@ -83,17 +80,16 @@ CREATE TABLE exchanges(
 ENGINE = MergeTree()
 ORDER BY (mic);
 
---historical table
-
-CREATE TABLE before202510_stock_data (
-date Date32,
-ticker String,
-close Float64,
-high Float64,
-low Float64,
-open Float64,
-volume UInt64,
-ingestion_date Date DEFAULT today()
+-- Historical table
+CREATE TABLE IF NOT EXISTS sp600_stocks.before202510_stock_data (
+    date Date,
+    ticker String,
+    close Float64,
+    high Float64,
+    low Float64,
+    open Float64,
+    volume UInt64,
+    ingestion_date Date DEFAULT today()
 )
 ENGINE = MergeTree()
 PARTITION BY toYYYYMM(date)

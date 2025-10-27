@@ -1,4 +1,4 @@
-Stock exchange,MIC,Region,City,Market cap (USD tn),Monthly trade volume (USD bn),Time zone,Δ,DST,Open hours (local time) (Open),Open hours (local time) (Close),Open hours (local time) (Lunch),"UTC, winter only (Open)","UTC, winter only (Close)"
+Stock_exchange,MIC,Region,City,Market cap (USD tn),Monthly trade volume (USD bn),Time zone,Δ,DST,Open hours (local time) (Open),Open hours (local time) (Close),Open hours (local time) (Lunch),"UTC, winter only (Open)","UTC, winter only (Close)"
 New York Stock Exchange,XNYS,United States,New York City,30.92[4],2685,EST/EDT,−5:00,Mar–Nov,09:30,16:00,No,14:30,21:00
 Nasdaq (US),XNAS,United States,New York City,31.96[5],2727,EST/EDT,−5:00,Mar–Nov,09:30,16:00,No,14:30,21:00
 Shanghai Stock Exchange,XSHG,China,Shanghai,7.96[6],1906,CST,+8:00,,09:30,15:00,11:30–13:00,01:30,07:00
