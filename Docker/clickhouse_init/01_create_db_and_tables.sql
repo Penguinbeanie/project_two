@@ -79,18 +79,3 @@ CREATE TABLE IF NOT EXISTS sp600_stocks.exchanges (
 )
 ENGINE = MergeTree()
 ORDER BY (mic);
-
--- Historical table
-CREATE TABLE IF NOT EXISTS sp600_stocks.before202510_stock_data (
-    date Date,
-    ticker String,
-    close Float64,
-    high Float64,
-    low Float64,
-    open Float64,
-    volume UInt64,
-    ingestion_date Date DEFAULT today()
-)
-ENGINE = MergeTree()
-PARTITION BY toYYYYMM(date)
-ORDER BY (date, ticker);
