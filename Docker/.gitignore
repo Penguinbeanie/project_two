@@ -44,7 +44,6 @@ Thumbs.db
 .env
 .env.*
 *.env
-profiles.yml
 secrets.yml
 *.key
 *.pem
