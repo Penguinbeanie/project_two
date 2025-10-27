@@ -66,3 +66,10 @@
 [2025-10-27T11:32:01.610+0000] {manager.py:755} INFO - Searching for files in /opt/airflow/dags
 [2025-10-27T11:32:01.619+0000] {manager.py:758} INFO - There are 0 files in /opt/airflow/dags
 [2025-10-27T11:32:09.924+0000] {manager.py:469} INFO - Exiting gracefully upon receiving signal 15
+[2025-10-27T21:54:24.508+0000] {manager.py:487} INFO - Processing files using up to 1 processes at a time 
+[2025-10-27T21:54:24.508+0000] {manager.py:488} INFO - Process each file at most once every 30 seconds
+[2025-10-27T21:54:24.508+0000] {manager.py:489} INFO - Checking for new files in /opt/airflow/dags every 300 seconds
+[2025-10-27T21:54:24.509+0000] {manager.py:755} INFO - Searching for files in /opt/airflow/dags
+[2025-10-27T21:54:24.513+0000] {manager.py:758} INFO - There are 0 files in /opt/airflow/dags
+[2025-10-27T21:59:24.519+0000] {manager.py:755} INFO - Searching for files in /opt/airflow/dags
+[2025-10-27T21:59:24.531+0000] {manager.py:758} INFO - There are 0 files in /opt/airflow/dags

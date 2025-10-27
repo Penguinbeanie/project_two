@@ -39,7 +39,17 @@ services:
       CLICKHOUSE_PASSWORD: password
     healthcheck:
       # Healthcheck now uses the 'airflow' user to authenticate
-      test: ["CMD", "curl", "-f", "http://localhost:8123/ping"]
+      test:
+        [
+          "CMD",
+          "clickhouse-client",
+          "--user",
+          "airflow",
+          "--password",
+          "password",
+          "-q",
+          "SELECT 1",
+        ]
       interval: 2s
       timeout: 1s
       retries: 5
@@ -55,9 +65,9 @@ services:
       airflow webserver"
     ports:
       - "8080:8080"
-#    depends_on:
-#      clickhouse:
-#        condition: service_healthy
+  #    depends_on:
+  #      clickhouse:
+  #        condition: service_healthy
 
   airflow-scheduler:
     <<: *airflow-common
