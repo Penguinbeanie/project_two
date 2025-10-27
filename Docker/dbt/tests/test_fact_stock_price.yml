@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: fact_stock_price
+    tests:
+      - not_null:
+          column_name: high
+      - not_null:
+          column_name: low
+      - not_null:
+          column_name: open
+      - not_null:
+          column_name: close
+      - not_null:
+          column_name: volume
+      - relationships:
+          arguments:
+            to: ref('dim_company')
+            field: company_id
+      - relationships:
+          arguments:
+            to: ref('dim_exchange')
+            field: exchange_id

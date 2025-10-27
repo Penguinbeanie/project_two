@@ -1,4 +1,5 @@
 version: "3.9"
+
 x-airflow-common: &airflow-common
   build:
     context: .
@@ -14,6 +15,7 @@ x-airflow-common: &airflow-common
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./data:/opt/airflow/data
+    - ./dbt:/opt/airflow/dbt
     - airflow_internal:/opt/airflow
 
 services:
@@ -37,11 +39,21 @@ services:
       CLICKHOUSE_PASSWORD: password
     healthcheck:
       # Healthcheck now uses the 'airflow' user to authenticate
-      test: ["CMD", "curl", "-f", "http://airflow:password@localhost:8123/ping"]
-      interval: 10s
-      timeout: 5s
+      test:
+        [
+          "CMD",
+          "clickhouse-client",
+          "--user",
+          "airflow",
+          "--password",
+          "password",
+          "-q",
+          "SELECT 1",
+        ]
+      interval: 2s
+      timeout: 1s
       retries: 5
-      start_period: 60s
+      start_period: 2s
 
   airflow-webserver:
     <<: *airflow-common
@@ -53,9 +65,9 @@ services:
       airflow webserver"
     ports:
       - "8080:8080"
-    depends_on:
-      clickhouse:
-        condition: service_healthy
+  #    depends_on:
+  #      clickhouse:
+  #        condition: service_healthy
 
   airflow-scheduler:
     <<: *airflow-common

@@ -1,0 +1,20 @@
+# dbt_project.yml
+name: "clickhouse_transformations"
+version: "1.0.0"
+
+config-version: 2
+
+profile: "clickhouse"   # matches the name inside profiles.yml
+
+# Folders containing your models
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+
+# Build settings
+models:
+  clickhouse_transformations:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: incremental
