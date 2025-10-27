@@ -14,6 +14,7 @@ x-airflow-common: &airflow-common
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./data:/opt/airflow/data
+    - ./dbt:/opt/airflow/dbt
     - airflow_internal:/opt/airflow
 
 services:
@@ -46,32 +47,32 @@ services:
       timeout: 5s
       retries: 5
 
-  ingestor-daily:
-    build:
-      context: .
-      dockerfile: Dockerfile.ingestor.daily
-    container_name: ingestor-daily
-    restart: "no"  # Don't restart after completion
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-    working_dir: /opt/scripts
-    volumes:
-      - ./data:/var/lib/clickhouse/user_files
+#  ingestor-daily:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile.ingestor.daily
+#    container_name: ingestor-daily
+#    restart: "no"  # Don't restart after completion
+#    depends_on:
+#      clickhouse:
+#        condition: service_healthy
+#    working_dir: /opt/scripts
+#    volumes:
+#      - ./data:/var/lib/clickhouse/user_files
+#
+#  ingestor-monthly:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile.ingestor.monthly
+#    container_name: ingestor-monthly
+#    restart: "no"  # Don't restart after completion
+#    depends_on:
+#      clickhouse:
+#        condition: service_healthy
+#    working_dir: /opt/scripts
+#    volumes:
+#      - ./data:/var/lib/clickhouse/user_files
 
-  ingestor-monthly:
-    build:
-      context: .
-      dockerfile: Dockerfile.ingestor.monthly
-    container_name: ingestor-monthly
-    restart: "no"  # Don't restart after completion
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-    working_dir: /opt/scripts
-    volumes:
-      - ./data:/var/lib/clickhouse/user_files
-  
   airflow-webserver:
     <<: *airflow-common
     container_name: airflow-webserver
