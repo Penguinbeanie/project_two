@@ -1,8 +1,8 @@
 {{ config(
     materialized = 'incremental',
-    unique_key = 'surrogate_id',
     incremental_strategy = 'insert_overwrite',
-    on_schema_change = 'sync_all_columns'
+    on_schema_change = 'sync_all_columns',
+    partition_by = ['toYYYYMM(trade_date)']
 ) }}
 
 WITH facts AS (
@@ -16,19 +16,18 @@ WITH facts AS (
         nullif(d.open, 0)                 AS open,
         nullif(d.close, 0)                AS close,
         nullif(d.volume, 0)               AS volume,
-        d.date                            AS trade_date,
-        now()                             AS load_ts
+        d.date                            AS trade_date
     FROM {{ ref('stg_daily_stock_data') }} d
 
-    LEFT JOIN {{ ref('dim_company') }} dc
+    LEFT ANY JOIN {{ ref('dim_company') }} dc
         ON dc.symbol = d.ticker
        AND dc.is_current = 1
 
-    LEFT JOIN {{ ref('dim_exchange') }} de
+    LEFT ANY JOIN {{ ref('dim_exchange') }} de
         ON de.is_current = 1
        AND dc.exchange_code = de.exchange_code
 
-    LEFT JOIN {{ ref('dim_date') }} dd
+    LEFT ANY JOIN {{ ref('dim_date') }} dd
         ON dd.full_date = d.date
 )
 
