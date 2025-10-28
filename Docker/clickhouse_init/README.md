@@ -61,6 +61,40 @@ Now restart:
 docker-compose restart ingestor
 ```
 
+### 3. We deleted ingestors from compose file, so if you wanna see how our scripts work(ingest_daily/monthly_data.py), follow next steps:
+#### Step 1: Install Python in ClickHouse Container
+
+Since the scripts need to access files in ClickHouse's filesystem, they must run inside the ClickHouse container:
+```bash
+docker exec -it clickhouse bash
+```
+
+Inside the container, install Python and dependencies:
+```bash
+apt-get update
+apt-get install -y python3 python3-pip
+pip3 install clickhouse-driver
+exit
+```
+
+#### Step 2: Copy Scripts to Data Directory
+
+The scripts need to be accessible in the ClickHouse container. Copy them to the `data` directory:
+```bash
+copy dags\scripts\ingest_daily_data.py data\
+copy dags\scripts\ingest_monthly_data.py data\
+```
+#### Step 3: Run Manual Ingestion
+
+**For Daily Data Ingestion:**
+```bash
+docker exec -it clickhouse python3 /var/lib/clickhouse/user_files/ingest_daily_data.py
+```
+
+**For Monthly Data Ingestion:**
+```bash
+docker exec -it clickhouse python3 /var/lib/clickhouse/user_files/ingest_monthly_data.py
+```
 
 
 
