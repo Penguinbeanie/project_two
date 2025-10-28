@@ -4,21 +4,26 @@ All commands must be run in the **airflow-webserver** container.
 
 The following commands use absolute paths and will work from any directory inside the container.
 
+Navigate to the dbt project directory
+```bash
+cd dbt
+```
+
 Run all models
 ```bash
-dbt run --project-dir /opt/airflow/dbt --profiles-dir /opt/airflow/dbt
+dbt run
 ```
 
 Run a specific model
 ```bash
-dbt run --project-dir /opt/airflow/dbt --profiles-dir /opt/airflow/dbt -m fact_stock_price
+dbt run -m fact_stock_price
 ```
 
 Test and document
 ```bash
-dbt test --project-dir /opt/airflow/dbt --profiles-dir /opt/airflow/dbt
-dbt docs generate --project-dir /opt/airflow/dbt --profiles-dir /opt/airflow/dbt
-dbt docs serve --project-dir /opt/airflow/dbt --profiles-dir /opt/airflow/dbt
+dbt test
+dbt docs generate
+dbt docs serve
 ```
 
 ## 🧩 Model Overview
