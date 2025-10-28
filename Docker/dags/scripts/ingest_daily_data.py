@@ -13,7 +13,7 @@ def create_client():
             client = Client(
                 host='clickhouse',
                 port=9000,
-                user='default',
+                user='airflow',
                 password='password',
                 database='sp600_stocks'
             )
