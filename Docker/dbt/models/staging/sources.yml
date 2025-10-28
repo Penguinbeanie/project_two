@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: sp600_stocks
+    description: "Bronze layer in ClickHouse containing raw ingested data from daily and monthly scripts."
+    schema: sp600_stocks
+    tables:
+      - name: daily_stock_data
+        description: "Raw daily OHLCV stock prices for SP600 components"
+      - name: company_details
+        description: "Monthly company details (sector, industry, employee count, etc.)"
+      - name: exchanges
+        description: "Stock exchange metadata (market cap, timezone, open hours)"
+      - name: sp500
+        description: "List of SP500 components for comparison"
+      - name: sp600
+        description: "List of SP600 components (core dataset)"
+      - name: before202510_stock_data
+        description: "Historical daily stock data (archived or legacy)"

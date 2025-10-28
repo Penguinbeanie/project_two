@@ -5,8 +5,74 @@ dbt/target
 .vscode/
 .idea/
 *.pyc
-__pycache__/
-.env
-.env.*
+# -------------------------------
+# DBT build artifacts
+# -------------------------------
+target/
+dbt_packages/
+logs/
+manifest.json
+run_results.json
+sources.json
+catalog.json
+
+# -------------------------------
+# ClickHouse / local database
+# -------------------------------
+*.db
+*.sql-journal
+clickhouse-data/
+clickhouse-backup/
+clickhouse_tmp/
+*.tmp
+
+# -------------------------------
+# Python environments (if using dbt-core via venv/poetry)
+# -------------------------------
 .venv/
 venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# -------------------------------
+# OS-specific files
+# -------------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------------
+# Environment and credentials
+# -------------------------------
+.env
+.env.*
+*.env
+secrets.yml
+*.key
+*.pem
+*.crt
+*.csr
+
+# -------------------------------
+# Editors / IDEs
+# -------------------------------
+.vscode/
+.idea/
+*.iml
+
+# -------------------------------
+# Docker / Compose
+# -------------------------------
+docker-compose.override.yml
+*.pid
+*.log
+*.sock
+.venv/
+venv/
+
+Docker/logs/
+

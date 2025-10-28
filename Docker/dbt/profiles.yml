@@ -1,0 +1,12 @@
+clickhouse:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      schema: star_schema
+      user: airflow
+      password: password
+      host: clickhouse
+      port: 9000
+      secure: False
+      verify: False
