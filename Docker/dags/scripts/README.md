@@ -34,8 +34,8 @@ This directory contains Python scripts used in the data engineering project for 
 - **Process**:
     1. Uses separate paths for Airflow file system access (/opt/airflow/data) and ClickHouse file() function (relative paths).
     2. Identifies the latest monthly company overview CSV file from monthly subdirectory.
-    3. Ingests the company overview data into the sp600_stocks.company_details table with timestamp using now().
-    4. Ingests the exchange data into the sp600_stocks.exchanges table with timestamp using now().
+    3. Ingests the company overview data into the `sp600_stocks.company_details` table with timestamp using now().
+    4. Ingests the exchange data into the `sp600_stocks.exchanges` table with timestamp using now().
 
 ### `monthly_extract_company_overview.py`
 - **Functionality**: Extracts detailed company overview information for S&P 500 and S&P 600 components using the `yfinance` library.
