@@ -1,21 +1,23 @@
-CREATE DATABASE IF NOT EXISTS sp600_stocks;
+DROP DATABASE IF EXISTS sp600_stocks;
+CREATE DATABASE sp600_stocks;
+USE sp600_stocks;
 
--- daily tables
-CREATE TABLE IF NOT EXISTS sp600_stocks.daily_stock_data (
-    date Date,
-    ticker String,
-    close Float64,
-    high Float64,
-    low Float64,
-    open Float64,
-    volume UInt64,
-    ingestion_date Date DEFAULT today()
-)
+--daily tables
+CREATE TABLE daily_stock_data (
+date Date,
+ticker String,
+close Float64,
+high Float64,
+low Float64,
+open Float64,
+volume UInt64,
+ingestion_date DateTime DEFAULT now()
+) 
 ENGINE = MergeTree()
 PARTITION BY toYYYYMM(date)
 ORDER BY (date, ticker);
 
-CREATE TABLE IF NOT EXISTS sp600_stocks.sp600 (
+CREATE TABLE sp600(
     symbol String,
     company String,
     gics_sector String,
@@ -23,44 +25,45 @@ CREATE TABLE IF NOT EXISTS sp600_stocks.sp600 (
     headquarters_location String,
     sec_filings String,
     cik String,
-    ingestion_date Date DEFAULT today()
+    ingestion_date DateTime DEFAULT now()
 )
 ENGINE = MergeTree()
-ORDER BY (symbol);
+ORDER BY (symbol, gics_sector, headquarters_location);
 
-CREATE TABLE IF NOT EXISTS sp600_stocks.sp500 (
+CREATE TABLE sp500(
     symbol String,
     security String,
     gics_sector String,
     gics_sub_industry String,
     headquarters_location String,
-    date_added Date,
+    date_added Date32,
     cik String,
     founded String,
-    ingestion_date Date DEFAULT today()
+    ingestion_date DateTime DEFAULT now()
 )
 ENGINE = MergeTree()
-ORDER BY (symbol);
+ORDER BY (symbol, gics_sector, headquarters_location);
 
--- Monthly tables
-CREATE TABLE IF NOT EXISTS sp600_stocks.company_details (
+--monthly tables
+
+CREATE TABLE company_details(
     symbol String,
     company_name String,
     sector String,
     industry String,
     headquarters_country String,
-    currency_code String,
+    currency_code FixedString(3),
     company_summary String,
     employee_count UInt32,
     website_url String,
     exchange_code String,
     exchange_timezone String,
-    ingestion_date Date DEFAULT today()
+    ingestion_date DateTime DEFAULT now()
 )
 ENGINE = MergeTree()
-ORDER BY (symbol);
+ORDER BY (symbol, sector, headquarters_country, currency_code);
 
-CREATE TABLE IF NOT EXISTS sp600_stocks.exchanges (
+CREATE TABLE exchanges(
     stock_exchange String,
     mic String,
     region String,
@@ -75,7 +78,8 @@ CREATE TABLE IF NOT EXISTS sp600_stocks.exchanges (
     has_lunch_break String,
     utc_winter_open_time String,
     utc_winter_close_time String,
-    ingestion_date Date DEFAULT today()
+    ingestion_date DateTime DEFAULT now()
 )
 ENGINE = MergeTree()
 ORDER BY (mic);
+
