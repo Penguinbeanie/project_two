@@ -30,7 +30,6 @@ You should see a prompt like `clickhouse-server :)`. You are now ready to run qu
 | `sp500` | S&P 500 components |
 | `company_details` | Monthly company overview data |
 | `exchanges` | Exchange information |
-| `before202510_stock_data` | Historical stock data (pre-Oct 2025) |
 
 ---
 ### 3. We deleted ingestors from compose file, so if you wanna see how our scripts work(ingest_daily/monthly_data.py), follow next step:
