@@ -23,20 +23,19 @@ This directory contains Python scripts used in the data engineering project for 
 ### `ingest_daily_data.py`
 - **Functionality**: Ingests daily stock data and S&P 500/600 components into a ClickHouse database.
 - **Process**:
-    1. Establishes a connection to the ClickHouse database.
-    2. Identifies the latest daily stock data CSV file from `daily` subdirectory within ClickHouse's `user_files`.
-    3. Ingests the daily stock data into the `sp600_stocks.daily_stock_data` table.
-    4. Ingests S&P 500 components from `sp500_components.csv` into the `sp600_stocks.sp500` table.
-    5. Ingests S&P 600 components from `sp600_components.csv` into the `sp600_stocks.sp600` table.
+    1. Uses separate paths for Airflow file system access (/opt/airflow/data) and ClickHouse file() function (relative paths).
+    2. Identifies the latest daily stock data CSV file from `daily` subdirectory.
+    3. Ingests the daily stock data into the `sp600_stocks.daily_stock_data` table with timestamp using now().
+    4. Ingests S&P 500 components from `sp500_components.csv` into the `sp600_stocks.sp500` table with timestamp using now().
+    5. Ingests S&P 600 components from `sp600_components.csv` into the `sp600_stocks.sp600` table with timestamp using now().
 
 ### `ingest_monthly_data.py`
 - **Functionality**: Ingests monthly company overview and exchange information into a ClickHouse database.
 - **Process**:
-    1. Establishes a connection to the ClickHouse database.
-    2. Identifies the latest monthly company overview CSV file from `monthly` subdirectory within ClickHouse's `user_files`.
-    3. Ingests the company overview data into the `sp600_stocks.company_details` table.
-    4. Identifies the latest monthly exchange information CSV file from `monthly` subdirectory within ClickHouse's `user_files`.
-    5. Ingests the exchange data into the `sp600_stocks.exchanges` table.
+    1. Uses separate paths for Airflow file system access (/opt/airflow/data) and ClickHouse file() function (relative paths).
+    2. Identifies the latest monthly company overview CSV file from monthly subdirectory.
+    3. Ingests the company overview data into the sp600_stocks.company_details table with timestamp using now().
+    4. Ingests the exchange data into the sp600_stocks.exchanges table with timestamp using now().
 
 ### `monthly_extract_company_overview.py`
 - **Functionality**: Extracts detailed company overview information for S&P 500 and S&P 600 components using the `yfinance` library.
