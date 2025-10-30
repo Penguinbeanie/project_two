@@ -2,12 +2,12 @@
 ### 1. Initialize Database and Tables
 Run the SQL scripts to create the database and tables:
 ```bash
-docker exec -it clickhouse clickhouse-client --multiquery --queries-file=/docker-entrypoint-initdb.d/sql/create_db_and_tables.sql
+docker exec -it clickhouse clickhouse-client --multiquery --queries-file=/docker-entrypoint-initdb.d/sql/01_create_db_and_tables.sql
 ```
 ### 2. Load Historic Data
 Execute the SQL script to load queries/data:
 ```bash
-docker exec -it clickhouse clickhouse-client --multiquery --queries-file=/docker-entrypoint-initdb.d/sql/load_historic_data.sql
+docker exec -it clickhouse clickhouse-client --multiquery --queries-file=/docker-entrypoint-initdb.d/sql/02_load_historic_data.sql
 ```
 ### 3.Connect to the Client: To start an interactive SQL session, run:
  ```bash
