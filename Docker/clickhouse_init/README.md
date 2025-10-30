@@ -15,7 +15,7 @@ docker exec -it clickhouse clickhouse-client --multiquery --queries-file=/docker
  ```
 You should see a prompt like `clickhouse-server :)`. You are now ready to run queries!
 
-## Comments
+## Comments:
 
 ### 1. ClickHouse Database
 
@@ -32,7 +32,7 @@ You should see a prompt like `clickhouse-server :)`. You are now ready to run qu
 | `exchanges` | Exchange information |
 
 ---
-### 3. We deleted ingestors from compose file, so if you wanna see how our scripts work(ingest_daily/monthly_data.py), follow next step:
+### 2. We deleted ingestors from compose file, so if you wanna see how our scripts work(ingest_daily/monthly_data.py), follow next step:
 
 **For Daily Data Ingestion:**
 ```bash
