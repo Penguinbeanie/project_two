@@ -28,11 +28,11 @@ def create_client():
 # --------------------------
 # Helper functions
 # --------------------------
-BASE_USER_FILES = "/var/lib/clickhouse/user_files"
+BASE_AIRFLOW_FILES = "/opt/airflow/data"
 
-def get_data_path(subdir, filename):
-    """Return full path inside ClickHouse user_files folder for file system access"""
-    return os.path.join(BASE_USER_FILES, subdir, filename)
+def get_airflow_path(subdir, filename):
+    """Return full path for file system access from Airflow container"""
+    return os.path.join(BASE_AIRFLOW_FILES, subdir, filename)
 
 def get_clickhouse_path(subdir, filename):
     """Return relative path for ClickHouse file() function"""
@@ -40,10 +40,13 @@ def get_clickhouse_path(subdir, filename):
 
 def list_files(subdir, suffix):
     """Return sorted list of files in a folder ending with suffix"""
-    folder = get_data_path(subdir, "")
+    folder = get_airflow_path(subdir, "")
     if not os.path.exists(folder):
+        print(f"Folder not found: {folder}")
         return []
-    return sorted([f for f in os.listdir(folder) if f.endswith(suffix)])
+    files = sorted([f for f in os.listdir(folder) if f.endswith(suffix)])
+    print(f"Found {len(files)} files in {folder} matching '*{suffix}'")
+    return files
 
 # --------------------------
 # Ingestion functions
@@ -55,9 +58,13 @@ def ingest_monthly_company_overview(client):
         print("No monthly overview files found, skipping.")
         return
     latest_file = monthly_files[-1]
-    full_path = get_data_path("monthly", latest_file)
+    airflow_path = get_airflow_path("monthly", latest_file)
     ch_path = get_clickhouse_path("monthly", latest_file)
-    print(f"Loading monthly company overview from {full_path}")
+    if not os.path.exists(airflow_path):
+        print(f"ERROR: File not found at {airflow_path}")
+        return
+    print(f"Loading monthly company overview from {airflow_path}")
+    print(f"ClickHouse will read from: {ch_path}")
     client.execute(f"""
         INSERT INTO sp600_stocks.company_details
             (symbol, company_name, sector, industry, headquarters_country, currency_code, company_summary, employee_count, website_url, exchange_code, exchange_timezone, ingestion_date)
@@ -73,7 +80,7 @@ def ingest_monthly_company_overview(client):
             toString(WebsiteURL),
             toString(ExchangeCode),
             toString(ExchangeTimezone),
-            today()
+            now()
         FROM file('{ch_path}', 'CSVWithNames')
     """)
     print("Monthly company overview loaded.")
@@ -84,9 +91,13 @@ def ingest_monthly_exchange_data(client):
         print("No monthly exchange files found, skipping.")
         return
     latest_file = monthly_files[-1]
-    full_path = get_data_path("monthly", latest_file)
+    airflow_path = get_airflow_path("monthly", latest_file)
     ch_path = get_clickhouse_path("monthly", latest_file)
-    print(f"Loading exchange data from {full_path}")
+    if not os.path.exists(airflow_path):
+        print(f"ERROR: File not found at {airflow_path}")
+        return
+    print(f"Loading exchange data from {airflow_path}")
+    print(f"ClickHouse will read from: {ch_path}")
     client.execute(f"""
         INSERT INTO sp600_stocks.exchanges
             (stock_exchange, mic, region, city, market_cap_usd_tn, monthly_trade_volume_usd_bn, time_zone, utc_offset, dst_period, local_open_time, local_close_time, has_lunch_break, utc_winter_open_time, utc_winter_close_time, ingestion_date)
@@ -105,7 +116,7 @@ def ingest_monthly_exchange_data(client):
             toString(`Open hours (local time) (Lunch)`),
             toString(`UTC, winter only (Open)`),
             toString(`UTC, winter only (Close)`),
-            today()
+            now()
         FROM file('{ch_path}', 'CSVWithNames')
     """)
     print("Exchange data loaded.")
