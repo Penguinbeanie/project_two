@@ -33,32 +33,16 @@ You should see a prompt like `clickhouse-server :)`. You are now ready to run qu
 | `before202510_stock_data` | Historical stock data (pre-Oct 2025) |
 
 ---
+### 3. We deleted ingestors from compose file, so if you wanna see how our scripts work(ingest_daily/monthly_data.py), follow next step:
 
-### 2. Current Setup & Known Issues
-
-#### Architecture
-- Built **two separate ingestors**: `ingestor-daily` and `ingestor-monthly`
-- Both run **once** when container starts (`restart: "no"`)
-
-#### ⚠️ Known Issue: Data Duplication
-**Problem:** Every time containers restart, data gets duplicated in tables.
-
-**Root Cause:** Ingestors use `INSERT` without checking for existing data.
-
-#### 🔧 Solutions
-
-In ClickHouse:
+**For Daily Data Ingestion:**
 ```bash
-TRUNCATE TABLE sp600_stocks.daily_stock_data;
-TRUNCATE TABLE sp600_stocks.sp600;
-TRUNCATE TABLE sp600_stocks.sp500;
-TRUNCATE TABLE sp600_stocks.company_details;
-TRUNCATE TABLE sp600_stocks.exchanges;
-exit
+docker exec -it airflow-scheduler python3 /opt/airflow/dags/scripts/ingest_daily_data.py
 ```
-Now restart: 
+
+**For Monthly Data Ingestion:**
 ```bash
-docker-compose restart ingestor
+docker exec -it airflow-scheduler python3 /opt/airflow/dags/scripts/ingest_monthly_data.py
 ```
 
 ## SQL Scripts Overview
@@ -83,14 +67,3 @@ docker-compose restart ingestor
     - Inserts data into `company_details` from `historic/2025_10_19_company_overview_data.csv`.
     - Inserts data into `exchanges` from `historic/wikipedia_exchange_information.csv`, skipping the header row.
 
-### 3. We deleted ingestors from compose file, so if you wanna see how our scripts work(ingest_daily/monthly_data.py), follow next step:
-
-**For Daily Data Ingestion:**
-```bash
-docker exec -it airflow-scheduler python3 /opt/airflow/dags/scripts/ingest_daily_data.py
-```
-
-**For Monthly Data Ingestion:**
-```bash
-docker exec -it airflow-scheduler python3 /opt/airflow/dags/scripts/ingest_monthly_data.py
-```
