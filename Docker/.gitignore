@@ -48,9 +48,6 @@ Thumbs.db
 # -------------------------------
 # Environment and credentials
 # -------------------------------
-.env
-.env.*
-*.env
 secrets.yml
 *.key
 *.pem
