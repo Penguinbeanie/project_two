@@ -1,0 +1,11 @@
+﻿<yandex>
+    <profiles>
+        <default>
+            <max_memory_usage>16000000000</max_memory_usage>
+            <max_bytes_before_external_group_by>8000000000</max_bytes_before_external_group_by>
+            <max_bytes_before_external_sort>8000000000</max_bytes_before_external_sort>
+            <max_threads>4</max_threads>
+            <max_execution_time>300</max_execution_time>
+        </default>
+    </profiles>
+</yandex>

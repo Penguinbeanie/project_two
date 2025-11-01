@@ -1,0 +1,34 @@
+"Sector","Ticker","CompanyName","total_volume"
+"Basic Materials","HL","Hecla Mining Company",19911100
+"Basic Materials","FCX","Freeport-McMoRan Inc.",15940400
+"Basic Materials","DOW","Dow Inc.",14986900
+"Communication Services","T","AT&T Inc.",59555800
+"Communication Services","CMCSA","Comcast Corporation",45432400
+"Communication Services","VZ","Verizon Communications Inc.",27967100
+"Consumer Cyclical","F","Ford Motor Company",131430300
+"Consumer Cyclical","TSLA","Tesla, Inc.",93732100
+"Consumer Cyclical","AMZN","Amazon.com, Inc.",37285900
+"Consumer Defensive","WMT","Walmart Inc.",20484200
+"Consumer Defensive","KDP","Keurig Dr Pepper Inc.",13550400
+"Consumer Defensive","KO","The Coca-Cola Company",12067900
+"Energy","XOM","Exxon Mobil Corporation",14623200
+"Energy","BKR","Baker Hughes Company",14432700
+"Energy","OXY","Occidental Petroleum Corporation",13459500
+"Financial Services","MARA","MARA Holdings, Inc.",39377800
+"Financial Services","BAC","Bank of America Corporation",36497700
+"Financial Services","CLSK","CleanSpark, Inc.",25333400
+"Healthcare","PFE","Pfizer Inc.",49626200
+"Healthcare","BMY","Bristol-Myers Squibb Company",13978200
+"Healthcare","MRNA","Moderna, Inc.",13511800
+"Industrials","JBLU","JetBlue Airways Corporation",29135400
+"Industrials","CSX","CSX Corporation",15172200
+"Industrials","UPS","United Parcel Service, Inc.",12635200
+"Real Estate","MPW","Medical Properties Trust, Inc.",16623200
+"Real Estate","HST","Host Hotels & Resorts, Inc.",11518700
+"Real Estate","WY","Weyerhaeuser Company",6646800
+"Technology","NVDA","NVIDIA Corporation",371235700
+"Technology","PLTR","Palantir Technologies Inc.",126592700
+"Technology","INTC","Intel Corporation",77523100
+"Utilities","PCG","PG&E Corporation",39323800
+"Utilities","AES","The AES Corporation",19129300
+"Utilities","VST","Vistra Corp.",9849800

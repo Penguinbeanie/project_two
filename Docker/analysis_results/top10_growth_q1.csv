@@ -1,0 +1,11 @@
+"Ticker","CompanyName","Sector","first_date","last_date","first_close","last_close","pct_growth"
+"CORT","Corcept Therapeutics Incorporated","Healthcare","2025-01-02","2025-03-31",49.970001220703125,114.22000122070312,128.58
+"CVS","CVS Health Corporation","Healthcare","2025-01-02","2025-03-31",42.753231048583984,66.33521270751953,55.16
+"MPW","Medical Properties Trust, Inc.","Real Estate","2025-01-02","2025-03-31",3.827514171600342,5.818594932556152,52.02
+"PRA","ProAssurance Corporation","Financial Services","2025-01-02","2025-03-31",15.710000038146973,23.350000381469727,48.63
+"PCRX","Pacira BioSciences, Inc.","Healthcare","2025-01-02","2025-03-31",18.329999923706055,24.850000381469727,35.57
+"SNDK","Sandisk Corporation","Technology","2025-02-13","2025-03-31",36,47.61000061035156,32.25
+"PM","Philip Morris International Inc.","Consumer Defensive","2025-01-02","2025-03-31",118.03426361083984,156.07728576660156,32.23
+"DNOW","DNOW Inc.","Industrials","2025-01-02","2025-03-31",12.949999809265137,17.079999923706055,31.89
+"PLMR","Palomar Holdings, Inc.","Financial Services","2025-01-02","2025-03-31",104.37999725341797,137.0800018310547,31.33
+"HCI","HCI Group, Inc.","Financial Services","2025-01-02","2025-03-31",113.5148696899414,148.48855590820312,30.81

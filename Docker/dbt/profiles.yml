@@ -1,12 +1,12 @@
 clickhouse:
-  target: dev
   outputs:
     dev:
-      type: clickhouse
-      schema: star_schema
-      user: airflow
-      password: password
       host: clickhouse
+      password: ''
       port: 9000
-      secure: False
-      verify: False
+      schema: sp600_stocks
+      secure: false
+      type: clickhouse
+      user: default
+      verify: false
+  target: dev

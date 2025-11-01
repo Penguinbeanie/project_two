@@ -1,9 +1,11 @@
-version: "3.9"
+﻿version: "3.9"
 
 x-airflow-common: &airflow-common
   build:
     context: .
     dockerfile: Dockerfile
+  env_file:
+   - .env
   environment: &airflow-environment
     AIRFLOW__CORE__EXECUTOR: SequentialExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
@@ -30,6 +32,7 @@ services:
       - clickhouse_data:/var/lib/clickhouse
       - ./clickhouse_init:/docker-entrypoint-initdb.d
       - ./data:/var/lib/clickhouse/user_files
+      - ./clickhouse_config:/etc/clickhouse-server/config.d
     environment:
       CLICKHOUSE_DB: sp600_stocks
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
@@ -69,6 +72,8 @@ services:
   #      clickhouse:
   #        condition: service_healthy
 
+   
+
   airflow-scheduler:
     <<: *airflow-common
     container_name: airflow-scheduler
@@ -80,3 +85,4 @@ services:
 volumes:
   clickhouse_data:
   airflow_internal:
+
