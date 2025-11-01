@@ -13,8 +13,8 @@ def create_client():
             client = Client(
                 host='clickhouse',
                 port=9000,
-                user='airflow',
-                password='password',
+                user='default',
+                password='',
                 database='sp600_stocks'
             )
             client.execute("SELECT 1")
@@ -57,7 +57,7 @@ def ingest_daily_stock_data(client):
     if not daily_files:
         print("No daily stock files found, skipping.")
         return
-    latest_file = daily_files[-1]
+    latest_file = daily_files[0]  # Use first valid file instead of latest
     airflow_path = get_airflow_path("daily", latest_file)
     ch_path = get_clickhouse_path("daily", latest_file)
     if not os.path.exists(airflow_path):
@@ -87,7 +87,7 @@ def ingest_sp500_components(client):
     if not daily_files:
         print("No SP500 components file found, skipping.")
         return
-    latest_file = daily_files[-1]
+    latest_file = daily_files[0]  # Use first valid file instead of latest
     airflow_path = get_airflow_path("daily", latest_file)
     ch_path = get_clickhouse_path("daily", latest_file)
     if not os.path.exists(airflow_path):
@@ -96,7 +96,7 @@ def ingest_sp500_components(client):
     print(f"Loading SP500 components from {airflow_path}")
     print(f"ClickHouse will read from: {ch_path}")
     client.execute(f"""
-        INSERT INTO sp600_stocks.sp500 
+        INSERT INTO sp600_stocks.sp500_components 
             (symbol, security, gics_sector, gics_sub_industry, headquarters_location, date_added, cik, founded, ingestion_date)
         SELECT
             Symbol, 
@@ -120,7 +120,7 @@ def ingest_sp600_components(client):
     if not daily_files:
         print("No SP600 components file found, skipping.")
         return
-    latest_file = daily_files[-1]
+    latest_file = daily_files[0]  # Use first valid file instead of latest
     airflow_path = get_airflow_path("daily", latest_file)
     ch_path = get_clickhouse_path("daily", latest_file)
     
@@ -132,7 +132,7 @@ def ingest_sp600_components(client):
     print(f"ClickHouse will read from: {ch_path}")
 
     client.execute(f"""
-        INSERT INTO sp600_stocks.sp600
+        INSERT INTO sp600_stocks.sp600_components
             (symbol, company, gics_sector, gics_sub_industry, headquarters_location, sec_filings, cik, ingestion_date)
         SELECT
             toString(Symbol),
