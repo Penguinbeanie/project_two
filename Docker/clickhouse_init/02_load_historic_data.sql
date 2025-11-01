@@ -1,10 +1,10 @@
-INSERT INTO sp600_stocks.daily_stock_data (date, ticker, close, high, low, open, volume,ingestion_date)
+﻿INSERT INTO daily_stock_data (date, ticker, close, high, low, open, volume,ingestion_date)
 SELECT
     toDate(Date), toString(Ticker), toFloat64(Close), toFloat64(High),
     toFloat64(Low), toFloat64(Open), toUInt64(Volume), now()
 FROM file('historic/historic_daily_stock_data.csv', 'CSVWithNames');
 
-INSERT INTO sp600_stocks.sp600 (symbol, company, gics_sector, gics_sub_industry, headquarters_location, sec_filings, cik, ingestion_date)
+INSERT INTO sp600 (symbol, company, gics_sector, gics_sub_industry, headquarters_location, sec_filings, cik, ingestion_date)
 SELECT
     toString(Symbol),
     toString(Company),
@@ -16,7 +16,7 @@ SELECT
     now()
 FROM file('historic/sp600_components.csv', 'CSVWithNames');
 
-INSERT INTO sp600_stocks.sp500 (symbol, security, gics_sector, gics_sub_industry, headquarters_location, date_added, cik, founded, ingestion_date)
+INSERT INTO sp500 (symbol, security, gics_sector, gics_sub_industry, headquarters_location, date_added, cik, founded, ingestion_date)
 SELECT
     Symbol, Security, `GICS Sector`, `GICS Sub-Industry`,
     `Headquarters Location`,
@@ -26,7 +26,7 @@ SELECT
     now()
 FROM file('historic/sp500_components.csv', 'CSVWithNames');
 
-INSERT INTO sp600_stocks.company_details (symbol, company_name, sector, industry, headquarters_country, currency_code, company_summary, employee_count, website_url, exchange_code, exchange_timezone, ingestion_date)
+INSERT INTO company_details (symbol, company_name, sector, industry, headquarters_country, currency_code, company_summary, employee_count, website_url, exchange_code, exchange_timezone, ingestion_date)
 SELECT
     toString(Symbol), toString(CompanyName), toString(Sector), toString(Industry),
     toString(HeadquartersCountry), toString(CurrencyCode), toString(CompanySummary),
@@ -34,7 +34,7 @@ SELECT
 -- Corrected suspected typo from .csv.csv to .csv
 FROM file('historic/2025_10_19_company_overview_data.csv', 'CSVWithNames');
 
-INSERT INTO sp600_stocks.exchanges (
+INSERT INTO exchanges (
     stock_exchange, mic, region, city, market_cap_usd_tn, monthly_trade_volume_usd_bn,
     time_zone, utc_offset, dst_period, local_open_time, local_close_time, has_lunch_break,
     utc_winter_open_time, utc_winter_close_time, ingestion_date

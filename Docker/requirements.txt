@@ -1,0 +1,3 @@
+﻿clickhouse-driver==0.2.6
+clickhouse-connect==0.6.22
+yfinance==0.2.18

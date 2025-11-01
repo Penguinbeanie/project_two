@@ -1,0 +1,12 @@
+FROM apache/airflow:2.7.3-python3.11
+
+USER root
+RUN rm -f /etc/apt/sources.list.d/mariadb.list || true
+RUN apt-get update && \
+    apt-get install -y gcc python3-dev git curl
+
+USER airflow
+RUN pip install --no-cache-dir clickhouse-driver clickhouse-connect yfinance
+
+# No CMD needed - let docker-compose handle i
+
