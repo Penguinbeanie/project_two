@@ -122,13 +122,17 @@ docker compose exec airflow-webserver bash -lc "cd /opt/airflow/dbt && dbt test 
 ```
 
 ## 8. Airflow DAG visuals
-<img width="762" height="319" alt="daily_dag_schema" src="https://github.com/user-attachments/assets/534e18de-8013-4e54-b95d-9ebdf8f8e5b7" />
+<img width="930" height="404" alt="daily_dag_schema_correct" src="https://github.com/user-attachments/assets/dcfd910e-a704-40d2-8a14-c37f705f7852" />
 <img width="756" height="325" alt="monthly_dag_schema" src="https://github.com/user-attachments/assets/14f3bd66-4d7c-4827-aad4-83316023a733" />
 <img width="955" height="505" alt="dags" src="https://github.com/user-attachments/assets/513eb8b3-56ac-4c3e-9b0c-47d3ff4c1786" />
 
 
 
 ## 9. Example Analytical Queries
+The example analytical queries are the following:
+
+For the 5th query we decided to look at it from many aspects:
+
 
 
 
