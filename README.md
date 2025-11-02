@@ -74,7 +74,7 @@ Follow these steps to get the pipeline running from a clean state.
     cd Docker
     ```
 
-2.  **Clean Up Previous Runs (Optional)**
+2.  **Clean Up Previous Runs**
 
     To ensure a completely fresh start, you can tear down any existing containers and volumes, and clear out the data from previous runs.
     ```bash
@@ -97,8 +97,8 @@ Follow these steps to get the pipeline running from a clean state.
     [http://localhost:8080](http://localhost:8080)
 
     Log in with the default credentials:
-    -   **Username:** `airflow`
-    -   **Password:** `airflow`
+    -   **Username:** `admin`
+    -   **Password:** `admin`
 
 5.  **Run the Pipelines**
 

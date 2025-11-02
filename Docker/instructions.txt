@@ -1,7 +1,0 @@
-Current container startup:
-
-cd Docker
-
-docker compose up -d
-
-To run dbt: see README.md in /dbt directory
