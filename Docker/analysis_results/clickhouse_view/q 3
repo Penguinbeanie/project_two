@@ -39,6 +39,7 @@ docker compose exec -T clickhouse bash -lc '
 >> SQL
 >> '
 
+# this is a helper to get the results to q3
 ┏━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
 ┃ p.Ticker ┃ start_close ┃  end_close ┃ pct_growth ┃
 ┡━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
