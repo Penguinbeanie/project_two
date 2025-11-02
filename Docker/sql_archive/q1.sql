@@ -1,0 +1,44 @@
+﻿WITH
+  toDate('2025-01-01') AS q1_start,
+  toDate('2025-03-31') AS q1_end,
+  ['sp500','sp600']    AS wanted_indexes,
+
+  latest_membership AS (
+    SELECT index_name, max(snapshot_date) AS snap
+    FROM analytics.index_membership_snapshots
+    WHERE index_name IN wanted_indexes
+    GROUP BY index_name
+  ),
+  universe AS (
+    SELECT DISTINCT m.Symbol
+    FROM analytics.index_membership_snapshots m
+    ANY INNER JOIN latest_membership l
+      ON m.index_name = l.index_name AND m.snapshot_date = l.snap
+  ),
+  comp_q1 AS (
+    SELECT Symbol, anyLast(CompanyName) AS CompanyName, anyLast(Sector) AS Sector
+    FROM (
+      SELECT Symbol, CompanyName, Sector, snapshot_date,
+             row_number() OVER (PARTITION BY Symbol ORDER BY snapshot_date DESC) AS rn
+      FROM analytics.company_overview_snapshots
+    )
+    WHERE rn = 1
+    GROUP BY Symbol
+  )
+SELECT Sector, Ticker, CompanyName, total_volume
+FROM (
+  SELECT
+    c.Sector       AS Sector,
+    d.Ticker       AS Ticker,
+    c.CompanyName  AS CompanyName,
+    sum(d.Volume)  AS total_volume,
+    row_number() OVER (PARTITION BY c.Sector ORDER BY sum(d.Volume) DESC) AS rn
+  FROM analytics.daily_stock_prices d
+  ANY INNER JOIN universe u ON u.Symbol = d.Ticker
+  LEFT JOIN comp_q1 c ON c.Symbol = d.Ticker
+  WHERE d.Date BETWEEN q1_start AND q1_end
+  GROUP BY c.Sector, d.Ticker, c.CompanyName
+)
+WHERE rn <= 3
+ORDER BY Sector, total_volume DESC
+FORMAT Pretty;

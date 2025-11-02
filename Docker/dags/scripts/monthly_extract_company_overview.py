@@ -1,42 +1,68 @@
-import yfinance as yf
-import pandas as pd
+import os
+import time
 from datetime import date
+import pandas as pd
+import yfinance as yf
 
-# Extracting current date
+# --- Paths & setup ---
+DATA_DIR = os.getenv("DATA_DIR", "/opt/airflow/data")
+DAILY_DIR = os.path.join(DATA_DIR, "daily")
+MONTHLY_DIR = os.path.join(DATA_DIR, "monthly")
+
+# ensure folders exist
+os.makedirs(DAILY_DIR, exist_ok=True)
+os.makedirs(MONTHLY_DIR, exist_ok=True)
+
 today_date = date.today().strftime("%Y_%m_%d")
+OUTPUT_FILE = os.path.join(MONTHLY_DIR, f"{today_date}_company_overview_data.csv")
 
-# Extracting Tickers
-df_500 = pd.read_csv("../../data/daily/sp500_components.csv")
-df_600 = pd.read_csv("../../data/daily/sp600_components.csv")
+sp500_path = os.path.join(DAILY_DIR, "sp500_components.csv")
+sp600_path = os.path.join(DAILY_DIR, "sp600_components.csv")
 
-df_comb = pd.concat([df_500.iloc[:, 0], df_600.iloc[:, 0]])
+# --- Inputs ---
+if not os.path.exists(sp500_path):
+    raise FileNotFoundError(f"SP500 file missing: {sp500_path}")
+if not os.path.exists(sp600_path):
+    raise FileNotFoundError(f"SP600 file missing: {sp600_path}")
+
+df_500 = pd.read_csv(sp500_path)
+df_600 = pd.read_csv(sp600_path)
+
+# first column assumed tickers
+tickers = pd.concat([df_500.iloc[:, 0], df_600.iloc[:, 0]], ignore_index=True)
+tickers = tickers.dropna().astype(str).str.strip().str.upper().unique().tolist()
+
+print(f"Fetching dimensional data for {len(tickers)} tickers...")
+all_rows = []
 
 
-# --- Configuration ---
-TICKERS = df_comb.tolist()
-OUTPUT_FILE = f"../../data/monthly/{today_date}_company_overview_data.csv"
+def get_info_safe(ticker_symbol: str, retries: int = 3, backoff: float = 1.0):
+    """Fetch yfinance info with small retries/backoff; supports both .info and .get_info()."""
+    last_err = None
+    for attempt in range(1, retries + 1):
+        try:
+            t = yf.Ticker(ticker_symbol)
+            # yfinance 0.2+ recommends get_info(); fall back to .info for older versions
+            info = getattr(t, "get_info", None)
+            info = info() if callable(info) else t.info
+            if isinstance(info, dict) and info:
+                return info
+            raise RuntimeError("Empty info dict")
+        except Exception as e:
+            last_err = e
+            time.sleep(backoff * attempt)
+    raise last_err
 
-# This list will hold the dictionary for each ticker's dimensions
-all_dimensions_data = []
 
-print(f"Fetching dimensional data for {len(TICKERS)} tickers...")
-
-# 1. Loop through each ticker symbol to make an individual API request
-n = 0
-for ticker_symbol in TICKERS:
+for i, sym in enumerate(tickers, start=1):
     try:
-        n = n + 1
-        print(f"Processing {ticker_symbol} [{n}]...")
-        ticker = yf.Ticker(ticker_symbol)
+        print(f"[{i}/{len(tickers)}] {sym}")
+        info = get_info_safe(sym)
 
-        # The .info attribute contains all the required dimensional data
-        info = ticker.info
-
-        # 2. Extract data for DimTicker and DimExchange from the info dictionary
-        ticker_data = {
-            # DimTicker Attributes
+        row = {
+            # DimTicker
             "Symbol": info.get("symbol"),
-            "CompanyName": info.get("longName"),
+            "CompanyName": info.get("longName") or info.get("shortName"),
             "Sector": info.get("sector"),
             "Industry": info.get("industry"),
             "HeadquartersCountry": info.get("country"),
@@ -44,25 +70,31 @@ for ticker_symbol in TICKERS:
             "CompanySummary": info.get("longBusinessSummary"),
             "EmployeeCount": info.get("fullTimeEmployees"),
             "WebsiteURL": info.get("website"),
-            # DimExchange Attributes
+            # DimExchange
             "ExchangeCode": info.get("exchange"),
             "ExchangeTimezone": info.get("exchangeTimezoneName"),
         }
-
-        all_dimensions_data.append(ticker_data)
-
+        all_rows.append(row)
     except Exception as e:
-        # Handle cases where a ticker might fail (e.g., delisted, invalid)
-        print(f"  -> ERROR: Could not fetch data for {ticker_symbol}. Reason: {e}")
+        print(f"  -> ERROR {sym}: {e}")
 
-# 3. Convert the list of dictionaries into a pandas DataFrame
-if all_dimensions_data:
-    final_df = pd.DataFrame(all_dimensions_data)
-
-    # 4. Save the DataFrame to a single CSV file
+# --- Output ---
+if all_rows:
+    final_df = pd.DataFrame(all_rows)
+    replace_exchange_names_dict = {
+        "NYQ": "New York Stock Exchange",
+        "NGM": "Nasdaq (US)",
+        "NMS": "Nasdaq (US)",
+        "NCM": "Nasdaq (US)",
+        "ASE": "New York Stock Exchange",
+    }
+    final_df["ExchangeCode"].replace(replace_exchange_names_dict, inplace=True)
     final_df.to_csv(OUTPUT_FILE, index=False)
-    print(f"\n✅ Successfully created '{OUTPUT_FILE}' with {len(final_df)} rows.")
-    print("The first few rows of the output file look like this:")
-    print(final_df.head())
+    print(f"Successfully created '{OUTPUT_FILE}' with {len(final_df)} rows.")
+    try:
+        print("Preview:")
+        print(final_df.head().to_string(index=False))
+    except Exception:
+        pass
 else:
-    print("\n❌ No data was fetched. Output file not created.")
+    print("No data was fetched. Output file not created.")
