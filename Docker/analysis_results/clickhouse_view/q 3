@@ -138,3 +138,5 @@ docker compose exec -T clickhouse bash -lc '
 │ PLMR     │ Palomar Holdings, Inc.            │ Financial Services │      31.33 │
 ├──────────┼───────────────────────────────────┼────────────────────┼────────────┤
 │ HCI      │ HCI Group, Inc.                   │ Financial Services │      30.81 │
+
+# Corresponding csv file with the answers is top10_growth_q1.csv
