@@ -503,3 +503,5 @@ docker exec clickhouse clickhouse-client --query "
 ├──────┼────────────────────────┼───────────────┼────────────┤
 │ 2025 │ Industrials            │             1 │       8.33 │
 └──────┴────────────────────────┴───────────────┴────────────┘
+
+# Corresponding answer files to this query are sector_comparison_2000_vs_2025.csv, sector_evolution_by_decade.csv and sector_growth_trends.csv
