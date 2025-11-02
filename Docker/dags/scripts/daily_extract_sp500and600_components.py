@@ -82,9 +82,7 @@ def extract_sp600_components():
         csv_file_name = os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", "sp600_components.csv")
 
         # Save the DataFrame to a CSV file
-        # --- TEMPORARY CHANGE: ONLY APPENDING LAST 10 ROWS ---
-        sp600_table.tail(10).to_csv(csv_file_name, index=False)
-        # --- END TEMPORARY CHANGE ---
+        sp600_table.to_csv(csv_file_name, index=False)
 
         print(f"Successfully extracted S&P 600 components to '{csv_file_name}'")
 
