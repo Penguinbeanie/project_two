@@ -39,9 +39,7 @@ def extract_sp500_components():
         csv_file_name = os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", "sp500_components.csv")
 
         # Save the DataFrame to a CSV file
-        # --- TEMPORARY CHANGE: ONLY APPENDING LAST 10 ROWS ---
-        sp500_table.tail(10).to_csv(csv_file_name, index=False)
-        # --- END TEMPORARY CHANGE ---
+        sp500_table.to_csv(csv_file_name, index=False)
 
         print(f"Successfully extracted S&P 500 components to '{csv_file_name}'")
 
