@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timedelta
+from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 import os
@@ -27,7 +27,6 @@ with DAG(
     default_args=default_args,
     tags=["daily", "orchestration"],
 ) as dag:
-
     base_env = {**os.environ, "DATA_DIR": DATA_DIR}
 
     # All tasks must be created within this DAG context
@@ -54,7 +53,7 @@ with DAG(
 
     load_analytics_daily_prices = BashOperator(
         task_id="load_analytics_daily_prices",
-        bash_command=r'''
+        bash_command=r"""
           set -euo pipefail
           cat <<'SQL' | curl -sS -u airflow:password --data-binary @- "http://clickhouse:8123/?database=analytics"
 ALTER TABLE analytics.daily_stock_prices
@@ -74,14 +73,14 @@ SELECT
 FROM sp600_stocks.daily_stock_data
 WHERE date >= subtractDays(today(), 3)
 SQL
-        ''',
+        """,
         env=base_env,
         dag=dag,
     )
 
     load_index_membership = BashOperator(
         task_id="load_index_membership",
-        bash_command=r'''
+        bash_command=r"""
           set -euo pipefail
           # Delete ALL index membership data
           cat <<'SQL' | curl -sS -u airflow:password --data-binary @- "http://clickhouse:8123/?database=analytics"
@@ -107,7 +106,7 @@ SELECT
   now() AS ingested_at
 FROM sp600_stocks.sp600
 SQL
-        ''',
+        """,
         env=base_env,
         dag=dag,
     )
@@ -123,4 +122,10 @@ SQL
     )
 
     # Set dependencies
-    extract_components >> extract_daily_prices >> ingest_daily_data >> [load_analytics_daily_prices, load_index_membership] >> dbt_run
+    (
+        extract_components
+        >> extract_daily_prices
+        >> ingest_daily_data
+        >> [load_analytics_daily_prices, load_index_membership]
+        >> dbt_run
+    )

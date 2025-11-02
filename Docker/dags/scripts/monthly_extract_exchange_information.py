@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 import io
+import os
 
 
 def extract_exchange_information():
@@ -43,7 +44,11 @@ def extract_exchange_information():
         exchange_table.columns = new_columns
 
         # Define the output CSV file name
-        csv_file_name = "../../data/monthly/wikipedia_exchange_information.csv"
+        csv_file_name = os.path.join(
+            os.getenv("DATA_DIR", "../../data"),
+            "monthly",
+            "wikipedia_exchange_information.csv",
+        )
 
         # Save the DataFrame to a CSV file
         exchange_table.to_csv(csv_file_name, index=False)
