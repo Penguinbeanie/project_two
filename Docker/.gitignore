@@ -68,8 +68,9 @@ docker-compose.override.yml
 *.sock
 
 #Logs
-logs/
+logs/**
 Docker/logs/
+dbt/logs/
 
 # Pipeline outputs
 data/

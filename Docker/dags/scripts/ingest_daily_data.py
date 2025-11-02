@@ -67,7 +67,7 @@ def ingest_daily_stock_data(client):
     if not daily_files:
         print("No daily stock files found, skipping.")
         return
-    latest_file = daily_files[0]
+    latest_file = daily_files[-1]
     airflow_path = get_airflow_path("daily", latest_file)
     ch_path = get_clickhouse_path("daily", latest_file)
     

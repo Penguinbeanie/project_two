@@ -52,75 +52,75 @@ with DAG(
         dag=dag,
     )
 
-    load_analytics_daily_prices = BashOperator(
-        task_id="load_analytics_daily_prices",
-        bash_command=r'''
-          set -euo pipefail
-          cat <<'SQL' | curl -sS -u airflow:password --data-binary @- "http://clickhouse:8123/?database=analytics"
-ALTER TABLE analytics.daily_stock_prices
-DELETE WHERE Date >= subtractDays(today(), 3)
-SQL
-          cat <<'SQL' | curl -sS -u airflow:password --data-binary @- "http://clickhouse:8123/?database=analytics"
-INSERT INTO analytics.daily_stock_prices
-SELECT
-  toDate(date)        AS Date,
-  toString(ticker)    AS Ticker,
-  toFloat64(open)     AS Open,
-  toFloat64(high)     AS High,
-  toFloat64(low)      AS Low,
-  toFloat64(close)    AS Close,
-  toFloat64(close)    AS AdjClose,
-  toUInt64(volume)    AS Volume
-FROM sp600_stocks.daily_stock_data
-WHERE date >= subtractDays(today(), 3)
-SQL
-        ''',
-        env=base_env,
-        dag=dag,
-    )
-
-    load_index_membership = BashOperator(
-        task_id="load_index_membership",
-        bash_command=r'''
-          set -euo pipefail
-          # Delete ALL index membership data
-          cat <<'SQL' | curl -sS -u airflow:password --data-binary @- "http://clickhouse:8123/?database=analytics"
-ALTER TABLE analytics.index_membership_snapshots DELETE WHERE 1=1
-SQL
-          # Load ALL SP500 membership
-          cat <<'SQL' | curl -sS -u airflow:password --data-binary @- "http://clickhouse:8123/?database=analytics"
-INSERT INTO analytics.index_membership_snapshots
-SELECT
-  today() AS snapshot_date,
-  'sp500' AS index_name,
-  toString(symbol) AS Symbol,
-  now() AS ingested_at
-FROM sp600_stocks.sp500
-SQL
-          # Load ALL SP600 membership
-          cat <<'SQL' | curl -sS -u airflow:password --data-binary @- "http://clickhouse:8123/?database=analytics"
-INSERT INTO analytics.index_membership_snapshots
-SELECT
-  today() AS snapshot_date,
-  'sp600' AS index_name,
-  toString(symbol) AS Symbol,
-  now() AS ingested_at
-FROM sp600_stocks.sp600
-SQL
-        ''',
-        env=base_env,
-        dag=dag,
-    )
+#     load_analytics_daily_prices = BashOperator(
+#         task_id="load_analytics_daily_prices",
+#         bash_command=r'''
+#           set -euo pipefail
+#           cat <<'SQL' | curl -sS -u default: --data-binary @- "http://clickhouse:8123/?database=star_schema"
+# ALTER TABLE star_schema.daily_stock_prices
+# DELETE WHERE Date >= subtractDays(today(), 3)
+# SQL
+#           cat <<'SQL' | curl -sS -u default: --data-binary @- "http://clickhouse:8123/?database=star_schema"
+# INSERT INTO star_schema.daily_stock_prices
+# SELECT
+#   toDate(date)        AS Date,
+#   toString(ticker)    AS Ticker,
+#   toFloat64(open)     AS Open,
+#   toFloat64(high)     AS High,
+#   toFloat64(low)      AS Low,
+#   toFloat64(close)    AS Close,
+#   toFloat64(close)    AS AdjClose,
+#   toUInt64(volume)    AS Volume
+# FROM sp600_stocks.daily_stock_data
+# WHERE date >= subtractDays(today(), 3)
+# SQL
+#         ''',
+#         env=base_env,
+#         dag=dag,
+#     )
+#
+#     load_index_membership = BashOperator(
+#         task_id="load_index_membership",
+#         bash_command=r'''
+#           set -euo pipefail
+#           # Delete ALL index membership data
+#           cat <<'SQL' | curl -sS -u default: --data-binary @- "http://clickhouse:8123/?database=star_schema"
+# ALTER TABLE star_schema.index_membership_snapshots DELETE WHERE 1=1
+# SQL
+#           # Load ALL SP500 membership
+#           cat <<'SQL' | curl -sS -u default: --data-binary @- "http://clickhouse:8123/?database=star_schema"
+# INSERT INTO star_schema.index_membership_snapshots
+# SELECT
+#   today() AS snapshot_date,
+#   'sp500' AS index_name,
+#   toString(symbol) AS Symbol,
+#   now() AS ingested_at
+# FROM sp600_stocks.sp500
+# SQL
+#           # Load ALL SP600 membership
+#           cat <<'SQL' | curl -sS -u default: --data-binary @- "http://clickhouse:8123/?database=star_schema"
+# INSERT INTO star_schema.index_membership_snapshots
+# SELECT
+#   today() AS snapshot_date,
+#   'sp600' AS index_name,
+#   toString(symbol) AS Symbol,
+#   now() AS ingested_at
+# FROM sp600_stocks.sp600
+# SQL
+#         ''',
+#         env=base_env,
+#         dag=dag,
+#     )
 
     dbt_run = BashOperator(
         task_id="dbt_run",
         bash_command=(
             f"cd {DBT_DIR} && "
-            f"dbt run --profiles-dir {DBT_PROFILES_DIR} --target {DBT_TARGET}"
+            "dbt run"
         ),
         env=base_env,
         dag=dag,
     )
 
     # Set dependencies
-    extract_components >> extract_daily_prices >> ingest_daily_data >> [load_analytics_daily_prices, load_index_membership] >> dbt_run
+    extract_components >> extract_daily_prices >> ingest_daily_data >>  dbt_run

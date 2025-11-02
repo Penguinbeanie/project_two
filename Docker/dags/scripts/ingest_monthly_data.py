@@ -102,7 +102,7 @@ def ingest_monthly_exchange_data(client):
         INSERT INTO sp600_stocks.exchanges
             (stock_exchange, mic, region, city, market_cap_usd_tn, monthly_trade_volume_usd_bn, time_zone, utc_offset, dst_period, local_open_time, local_close_time, has_lunch_break, utc_winter_open_time, utc_winter_close_time, ingestion_date)
         SELECT
-            toString(`Stock_exchange`),
+            toString(`Stock exchange`),
             toString(MIC),
             toString(Region),
             toString(City),

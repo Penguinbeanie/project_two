@@ -35,6 +35,7 @@ tickers = tickers.dropna().astype(str).str.strip().str.upper().unique().tolist()
 print(f"Fetching dimensional data for {len(tickers)} tickers...")
 all_rows = []
 
+
 def get_info_safe(ticker_symbol: str, retries: int = 3, backoff: float = 1.0):
     """Fetch yfinance info with small retries/backoff; supports both .info and .get_info()."""
     last_err = None
@@ -51,6 +52,7 @@ def get_info_safe(ticker_symbol: str, retries: int = 3, backoff: float = 1.0):
             last_err = e
             time.sleep(backoff * attempt)
     raise last_err
+
 
 for i, sym in enumerate(tickers, start=1):
     try:
@@ -79,6 +81,14 @@ for i, sym in enumerate(tickers, start=1):
 # --- Output ---
 if all_rows:
     final_df = pd.DataFrame(all_rows)
+    replace_exchange_names_dict = {
+        "NYQ": "New York Stock Exchange",
+        "NGM": "Nasdaq (US)",
+        "NMS": "Nasdaq (US)",
+        "NCM": "Nasdaq (US)",
+        "ASE": "New York Stock Exchange",
+    }
+    final_df["ExchangeCode"].replace(replace_exchange_names_dict, inplace=True)
     final_df.to_csv(OUTPUT_FILE, index=False)
     print(f"Successfully created '{OUTPUT_FILE}' with {len(final_df)} rows.")
     try:

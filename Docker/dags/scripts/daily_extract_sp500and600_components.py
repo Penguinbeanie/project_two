@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 import io
+import os
 
 
 def extract_sp500_components():
@@ -35,10 +36,12 @@ def extract_sp500_components():
         sp500_table["Symbol"] = sp500_table["Symbol"].str.replace(".", "-", regex=False)
 
         # Define the output CSV file name
-        csv_file_name = "../../data/daily/sp500_components.csv"
+        csv_file_name = os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", "sp500_components.csv")
 
         # Save the DataFrame to a CSV file
-        sp500_table.to_csv(csv_file_name, index=False)
+        # --- TEMPORARY CHANGE: ONLY APPENDING LAST 10 ROWS ---
+        sp500_table.tail(10).to_csv(csv_file_name, index=False)
+        # --- END TEMPORARY CHANGE ---
 
         print(f"Successfully extracted S&P 500 components to '{csv_file_name}'")
 
@@ -78,10 +81,12 @@ def extract_sp600_components():
         sp600_table["Symbol"] = sp600_table["Symbol"].str.replace(".", "-", regex=False)
 
         # Define the output CSV file name
-        csv_file_name = "../../data/daily/sp600_components.csv"
+        csv_file_name = os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", "sp600_components.csv")
 
         # Save the DataFrame to a CSV file
-        sp600_table.to_csv(csv_file_name, index=False)
+        # --- TEMPORARY CHANGE: ONLY APPENDING LAST 10 ROWS ---
+        sp600_table.tail(10).to_csv(csv_file_name, index=False)
+        # --- END TEMPORARY CHANGE ---
 
         print(f"Successfully extracted S&P 600 components to '{csv_file_name}'")
 

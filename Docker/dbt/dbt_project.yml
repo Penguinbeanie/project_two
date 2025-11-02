@@ -16,5 +16,7 @@ models:
   clickhouse_transformations:
     staging:
       +materialized: view
+      +tags: ["silver"]
     marts:
       +materialized: incremental
+      +tags: ["gold"]

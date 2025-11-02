@@ -6,8 +6,6 @@ from airflow.operators.bash import BashOperator
 # --- Configuration from environment (.env file) ---
 SCRIPTS_DIR = os.getenv("SCRIPTS_DIR", "/opt/airflow/dags/scripts")
 DBT_PROFILES_DIR = os.getenv("DBT_PROFILES_DIR", "/opt/airflow/dbt")
-DBT_TARGET = os.getenv("DBT_TARGET", "prod")
-DBT_GOLD_SELECTOR = os.getenv("DBT_GOLD_SELECTOR", "tag:gold")
 DATA_DIR = os.getenv("DATA_DIR", "/opt/airflow/data")
 DBT_DIR = os.getenv("DBT_DIR", "/opt/airflow/dbt")
 
@@ -52,13 +50,12 @@ with DAG(
         env=base_env,
     )
 
-    # --- dbt core models (incremental) ---
-    dbt_run_core = BashOperator(
-        task_id="dbt_run_core",
+    # --- dbt core models (incremental silver layer) ---
+    dbt_run_silver = BashOperator(
+        task_id="dbt_run_silver",
         bash_command=(
             f"cd {DBT_DIR} && "
-            f"dbt run --profiles-dir {DBT_PROFILES_DIR} "
-            f"--target {DBT_TARGET} --select staging+ marts"
+            f"dbt run --select tag:silver"
         ),
         env=base_env,
     )
@@ -68,8 +65,7 @@ with DAG(
         task_id="dbt_refresh_gold",
         bash_command=(
             f"cd {DBT_DIR} && "
-            f"dbt run --full-refresh --profiles-dir {DBT_PROFILES_DIR} "
-            f"--target {DBT_TARGET} --select {DBT_GOLD_SELECTOR}"
+            f"dbt run --full-refresh --select tag:gold"
         ),
         env=base_env,
     )
@@ -79,10 +75,9 @@ with DAG(
         task_id="dbt_test_gold",
         bash_command=(
             f"cd {DBT_DIR} && "
-            f"dbt test --profiles-dir {DBT_PROFILES_DIR} "
-            f"--target {DBT_TARGET} --select {DBT_GOLD_SELECTOR}"
+            f"dbt test --select tag:gold"
         ),
         env=base_env,
     )
 
-    [extract_exchanges, extract_company_overview] >> ingest_monthly_data >> dbt_run_core >> dbt_refresh_gold >> dbt_test_gold
+    [extract_exchanges, extract_company_overview] >> ingest_monthly_data >> dbt_run_silver >> dbt_refresh_gold >> dbt_test_gold
