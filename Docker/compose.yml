@@ -1,82 +1,107 @@
-version: "3.9"
-
-x-airflow-common: &airflow-common
-  build:
-    context: .
-    dockerfile: Dockerfile
-  environment: &airflow-environment
-    AIRFLOW__CORE__EXECUTOR: SequentialExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
-    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-    AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth
-    # IMPORTANT: Update the user and password to match ClickHouse admin
-    AIRFLOW_CONN_CLICKHOUSE_DEFAULT: "clickhouse://airflow:password@clickhouse:9000/sp600_stocks"
-  volumes:
-    - ./dags:/opt/airflow/dags
-    - ./logs:/opt/airflow/logs
-    - ./data:/opt/airflow/data
-    - ./dbt:/opt/airflow/dbt
-    - airflow_internal:/opt/airflow
+﻿version: "3.9"
 
 services:
   clickhouse:
     image: clickhouse/clickhouse-server:23.8
     container_name: clickhouse
-    restart: unless-stopped
     ports:
-      - "8123:8123"
-      - "9000:9000"
-    volumes:
-      - clickhouse_data:/var/lib/clickhouse
-      - ./clickhouse_init:/docker-entrypoint-initdb.d
-      - ./data:/var/lib/clickhouse/user_files
+      - "8123:8123"  # HTTP interface
+      - "9000:9000"  # Native interface
     environment:
       CLICKHOUSE_DB: sp600_stocks
-      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
-      # Create 'airflow' as the primary admin user
-      CLICKHOUSE_USER: airflow
-      # Set the password for the 'airflow' user (and the 'default' user)
-      CLICKHOUSE_PASSWORD: password
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ""
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./data:/var/lib/clickhouse/user_files
+      - ./clickhouse_config:/etc/clickhouse-server/config.d
+      - ./clickhouse_init:/docker-entrypoint-initdb.d
     healthcheck:
-      # Healthcheck now uses the 'airflow' user to authenticate
-      test:
-        [
-          "CMD",
-          "clickhouse-client",
-          "--user",
-          "airflow",
-          "--password",
-          "password",
-          "-q",
-          "SELECT 1",
-        ]
-      interval: 2s
-      timeout: 1s
+      test: ["CMD-SHELL", "clickhouse-client --query='SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      timeout: 5s
       retries: 5
-      start_period: 2s
+      start_period: 30s
 
   airflow-webserver:
-    <<: *airflow-common
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: airflow-webserver
-    restart: unless-stopped
     command: >
-      bash -c "airflow db migrate &&
-      airflow users create --username airflow --password airflow --firstname Admin --lastname User --role Admin --email admin@example.com || true &&
-      airflow webserver"
+      bash -c "
+        ./airflow-init.sh &&
+        airflow webserver
+      "
     ports:
       - "8080:8080"
-  #    depends_on:
-  #      clickhouse:
-  #        condition: service_healthy
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      PYTHONPATH: /opt/airflow/dags
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./data:/opt/airflow/data
+      - ./dbt:/opt/airflow/dbt
+      - ./clickhouse_init:/clickhouse_init
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   airflow-scheduler:
-    <<: *airflow-common
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: airflow-scheduler
-    restart: unless-stopped
-    command: airflow scheduler
+    command: >
+      bash -c "
+        ./airflow-init.sh &&
+        airflow scheduler
+      "
     depends_on:
-      - airflow-webserver
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      PYTHONPATH: /opt/airflow/dags
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./data:/opt/airflow/data
+      - ./dbt:/opt/airflow/dbt
+      - ./clickhouse_init:/clickhouse_init
 
 volumes:
   clickhouse_data:
-  airflow_internal:
+  postgres_data:

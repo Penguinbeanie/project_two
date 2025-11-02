@@ -1,8 +1,9 @@
-import yfinance as yf
+﻿import yfinance as yf
 import pandas as pd
 from datetime import date
 from datetime import timedelta
 import sys
+import os
 
 # Extracting current date
 today_date_obj = date.today()
@@ -12,8 +13,8 @@ yesterday_str = yesterday_date_obj.strftime("%Y-%m-%d")
 today_file = today_date_obj.strftime("%Y_%m_%d")
 
 # Extracting Tickers
-df_500 = pd.read_csv("../../data/daily/sp500_components.csv")
-df_600 = pd.read_csv("../../data/daily/sp600_components.csv")
+df_500 = pd.read_csv(os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", "sp500_components.csv"))
+df_600 = pd.read_csv(os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", "sp600_components.csv"))
 
 df_comb = pd.concat([df_500.iloc[:, 0], df_600.iloc[:, 0]])
 
@@ -21,7 +22,7 @@ df_comb = pd.concat([df_500.iloc[:, 0], df_600.iloc[:, 0]])
 TICKERS = df_comb.tolist()
 START_DATE = yesterday_str
 END_DATE = today_str  # The current date, to get the latest data
-OUTPUT_FILE = f"../../data/daily/{today_file}_daily_stock_data.csv"
+OUTPUT_FILE = os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", f"{today_file}_daily_stock_data.csv")
 
 print(f"Fetching daily data for {TICKERS}...")
 

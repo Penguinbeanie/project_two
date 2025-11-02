@@ -3,7 +3,7 @@ CREATE DATABASE sp600_stocks;
 USE sp600_stocks;
 
 --daily tables
-CREATE TABLE daily_stock_data (
+CREATE TABLE sp600_stocks.daily_stock_data (
 date Date,
 ticker String,
 close Float64,
@@ -17,7 +17,7 @@ ENGINE = MergeTree()
 PARTITION BY toYYYYMM(date)
 ORDER BY (date, ticker);
 
-CREATE TABLE sp600(
+CREATE TABLE sp600_stocks.sp600(
     symbol String,
     company String,
     gics_sector String,
@@ -30,7 +30,7 @@ CREATE TABLE sp600(
 ENGINE = MergeTree()
 ORDER BY (symbol, gics_sector, headquarters_location);
 
-CREATE TABLE sp500(
+CREATE TABLE sp600_stocks.sp500(
     symbol String,
     security String,
     gics_sector String,
@@ -46,7 +46,7 @@ ORDER BY (symbol, gics_sector, headquarters_location);
 
 --monthly tables
 
-CREATE TABLE company_details(
+CREATE TABLE sp600_stocks.company_details(
     symbol String,
     company_name String,
     sector String,
@@ -63,7 +63,7 @@ CREATE TABLE company_details(
 ENGINE = MergeTree()
 ORDER BY (symbol, sector, headquarters_country, currency_code);
 
-CREATE TABLE exchanges(
+CREATE TABLE sp600_stocks.exchanges(
     stock_exchange String,
     mic String,
     region String,

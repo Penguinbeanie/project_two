@@ -48,9 +48,6 @@ Thumbs.db
 # -------------------------------
 # Environment and credentials
 # -------------------------------
-.env
-.env.*
-*.env
 secrets.yml
 *.key
 *.pem
@@ -60,7 +57,6 @@ secrets.yml
 # -------------------------------
 # Editors / IDEs
 # -------------------------------
-.vscode/
 .idea/
 *.iml
 
@@ -69,10 +65,12 @@ secrets.yml
 # -------------------------------
 docker-compose.override.yml
 *.pid
-*.log
 *.sock
-.venv/
-venv/
 
+#Logs
+logs/**
 Docker/logs/
+dbt/logs/
 
+# Pipeline outputs
+data/

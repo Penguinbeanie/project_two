@@ -1,4 +1,4 @@
-import os
+﻿import os
 import time
 from clickhouse_driver import Client
 from datetime import datetime
@@ -13,8 +13,8 @@ def create_client():
             client = Client(
                 host='clickhouse',
                 port=9000,
-                user='airflow',
-                password='password',
+                user='default',
+                password='',
                 database='sp600_stocks'
             )
             client.execute("SELECT 1")
@@ -48,8 +48,18 @@ def list_files(subdir, suffix):
     print(f"Found {len(files)} files in {folder} matching '*{suffix}'")
     return files
 
+def is_file_empty(file_path):
+    """Check if file only contains headers (1 line)"""
+    try:
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
+            return len(lines) <= 1  # Only header or empty
+    except Exception as e:
+        print(f"Error checking file {file_path}: {e}")
+        return True
+
 # --------------------------
-# Daily Ingestion functions
+# Daily Ingestion functions - UPDATED TABLE NAMES
 # --------------------------
 def ingest_daily_stock_data(client):
     """Ingest all available daily stock CSVs in ./data/daily/"""
@@ -60,13 +70,20 @@ def ingest_daily_stock_data(client):
     latest_file = daily_files[-1]
     airflow_path = get_airflow_path("daily", latest_file)
     ch_path = get_clickhouse_path("daily", latest_file)
+    
     if not os.path.exists(airflow_path):
         print(f"ERROR: File not found at {airflow_path}")
         return
+    
+    # Check if file is empty (only headers)
+    if is_file_empty(airflow_path):
+        print(f"File {airflow_path} contains no data (only headers), skipping ingestion.")
+        return
+        
     print(f"Loading daily stock data from {airflow_path}")
     print(f"ClickHouse will read from: {ch_path}")
     client.execute(f"""
-        INSERT INTO sp600_stocks.daily_stock_data
+        INSERT INTO daily_stock_data
             (date, ticker, close, high, low, open, volume, ingestion_date)
         SELECT
             toDate(Date),
@@ -87,29 +104,36 @@ def ingest_sp500_components(client):
     if not daily_files:
         print("No SP500 components file found, skipping.")
         return
-    latest_file = daily_files[-1]
+    latest_file = daily_files[0]
     airflow_path = get_airflow_path("daily", latest_file)
     ch_path = get_clickhouse_path("daily", latest_file)
+    
     if not os.path.exists(airflow_path):
         print(f"File not found: {airflow_path}, skipping SP500 ingestion.")
-        return    
+        return
+    
+    # Check if file is empty
+    if is_file_empty(airflow_path):
+        print(f"File {airflow_path} contains no data, skipping ingestion.")
+        return
+        
     print(f"Loading SP500 components from {airflow_path}")
     print(f"ClickHouse will read from: {ch_path}")
     client.execute(f"""
-        INSERT INTO sp600_stocks.sp500 
+        INSERT INTO sp500
             (symbol, security, gics_sector, gics_sub_industry, headquarters_location, date_added, cik, founded, ingestion_date)
         SELECT
-            Symbol, 
-            Security, 
-            `GICS Sector`, 
-            `GICS Sub-Industry`, 
-            `Headquarters Location`, 
+            Symbol,
+            Security,
+            `GICS Sector`,
+            `GICS Sub-Industry`,
+            `Headquarters Location`,
             toDate32(`Date added`),
-            CIK, 
-            Founded, 
+            CIK,
+            Founded,
             now()
-        FROM file('{ch_path}', 
-          'CSVWithNames', 
+        FROM file('{ch_path}',
+          'CSVWithNames',
           'Symbol String, Security String, `GICS Sector` String, `GICS Sub-Industry` String, `Headquarters Location` String, `Date added` String, CIK String, Founded String')
     """)
     print("SP500 component data loaded.")
@@ -120,19 +144,24 @@ def ingest_sp600_components(client):
     if not daily_files:
         print("No SP600 components file found, skipping.")
         return
-    latest_file = daily_files[-1]
+    latest_file = daily_files[0]
     airflow_path = get_airflow_path("daily", latest_file)
     ch_path = get_clickhouse_path("daily", latest_file)
-    
+
     if not os.path.exists(airflow_path):
         print(f"File not found: {airflow_path}, skipping SP600 ingestion.")
         return
-    
+
+    # Check if file is empty
+    if is_file_empty(airflow_path):
+        print(f"File {airflow_path} contains no data, skipping ingestion.")
+        return
+
     print(f"Loading SP600 components from {airflow_path}")
     print(f"ClickHouse will read from: {ch_path}")
 
     client.execute(f"""
-        INSERT INTO sp600_stocks.sp600
+        INSERT INTO sp600
             (symbol, company, gics_sector, gics_sub_industry, headquarters_location, sec_filings, cik, ingestion_date)
         SELECT
             toString(Symbol),
@@ -152,10 +181,10 @@ def ingest_sp600_components(client):
 # --------------------------
 if __name__ == "__main__":
     client = create_client()
-    
+
     print("=== Starting Daily Data Ingestion ===")
     ingest_daily_stock_data(client)
     ingest_sp500_components(client)
     ingest_sp600_components(client)
-    
+
     print("=== Daily ingestion cycle complete ===")

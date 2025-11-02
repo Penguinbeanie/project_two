@@ -1,0 +1,6 @@
+<yandex>
+  <logger>
+    <level>information</level>
+    <console>true</console>
+  </logger>
+</yandex>
