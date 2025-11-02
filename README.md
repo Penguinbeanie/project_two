@@ -1,144 +1,124 @@
-# Project Two — Data Orchestration with Airflow, dbt, and ClickHouse
+# Project: Data Orchestration with Airflow, dbt, and ClickHouse
 
-This part of the project builds a full end-to-end data orchestration pipeline integrating **Airflow**, **dbt**, and **ClickHouse**.  
-It automates data extraction from Yahoo Finance, loading into ClickHouse, and transformation using dbt.
+This project implements an end-to-end data orchestration pipeline. It automates the process of extracting financial data, loading it into a data warehouse, and transforming it for analytics.
 
----
+The pipeline leverages the following stack:
+- **Apache Airflow:** For orchestrating and scheduling data workflows.
+- **dbt (Data Build Tool):** For transforming data within the warehouse.
+- **ClickHouse:** For storing our data.
 
-## 1. Architecture Overview
-Yahoo Finance → [Airflow extract] → CSV in /opt/airflow/data
+## Environment Overview
 
-↓
+This project runs a containerized environment using Docker Compose, orchestrating several key services:
 
-[Ingest → ClickHouse (bronze layer)]
+*   **Airflow:** The core of the orchestration pipeline, running with a `LocalExecutor`. It consists of a web server and a scheduler. The DAGs (`dags/`), data (`data/`), and dbt project (`dbt/`) directories are mounted from your local machine, allowing for easy development and modification.
+    *   **Webserver:** Accessible at `http://localhost:8080`.
+*   **ClickHouse:** The primary data warehouse for storing stock data.
+    *   **HTTP Interface:** Accessible on port `8123`.
+    *   **Native Interface:** Accessible on port `9000`.
+*   **PostgreSQL:** Serves as the metadata database for Airflow.
 
-↓
+This setup is defined in the `compose.yml` file, which links these services together and manages their configuration, volumes, and networking.
 
-[dbt run → marts / gold layer]
+## Orchestration (Airflow DAGs)
 
-### DAGs
+The `dags/` directory contains the Airflow DAGs that orchestrate the entire ETL pipeline.
 
-| DAG Name | Description |
-|-----------|--------------|
-| `daily_market_etl` | Extracts daily stock data, ingests into ClickHouse, and runs dbt transformations. |
-| `monthly_reference_etl` | Extracts reference data (exchanges, companies), ingests monthly datasets, runs dbt core, refreshes gold layer, and runs dbt tests. |
+-   **`daily_market_etl`**: This DAG runs every weekday. It extracts the latest daily stock prices, ingests the data into ClickHouse, and then triggers a `dbt run` to transform the data.
+-   **`monthly_reference_etl`**: Scheduled for the first of each month, this DAG extracts and ingests reference data (company and exchange information). It then runs the dbt models, performs a full refresh on the final "gold" tables, and runs data quality tests.
 
----
+## Pipeline Scripts
 
-## 2. Requirements
+The core logic of the data pipeline is contained within a series of Python scripts located in `dags/scripts/`. These are orchestrated by Airflow to perform extraction and ingestion tasks.
 
-- **Docker** and **Docker Compose**
-- **Internet connection** (for Yahoo Finance data via `yfinance`)
-- **Ports:**
-  - Airflow UI → `localhost:8080`
-  - ClickHouse → `8123` (HTTP) / `9000` (native)
+### Data Extraction
 
----
+Extraction scripts are responsible for fetching data from various web sources and saving it locally as CSV files.
 
-## 3. Quick Start
+-   **Daily Stock Data:** Scripts run daily to download the latest stock prices for S&P 500 and S&P 600 companies using the `yfinance` library.
+-   **Company & Exchange Data:** On a monthly basis, scripts extract foundational data, including detailed company profiles from `yfinance` and a list of major stock exchanges from Wikipedia.
 
-### 1️⃣ Clone the repository
-```bash
-git clone <your_repo_url>
-cd project_two/Docker
-```
+### Data Ingestion
 
-2️⃣ Create .env
-```bash
-cat << 'EOF' > .env
-DATA_DIR=/opt/airflow/data
-SCRIPTS_DIR=/opt/airflow/dags/scripts
-DBT_PROFILES_DIR=/opt/airflow/dbt
-DBT_TARGET=dev
-DBT_GOLD_SELECTOR=tag:gold
-SCHEDULE_TZ=Europe/Tallinn
-EOF
-```
+Ingestion scripts take the raw CSV files produced by the extraction process and load them into the ClickHouse database.
 
+-   The scripts connect to the ClickHouse service and execute `INSERT` queries to bulk-load data from the CSV files into the appropriate tables.
+-   This process is divided into daily and monthly ingestion tasks to handle the different data cadences.
 
-3️⃣ Launch Docker
-```bash
-docker compose up -d
-```
+## Data Transformation (dbt)
 
+The `dbt/` directory houses the dbt project responsible for the transformation phase of the pipeline. It transforms the raw, ingested data into a structured star schema suitable for analytics.
 
-4️⃣ Open Airflow UI
+-   **Staging Models:** Raw data from the `sp600_stocks` database is first cleaned and standardized in staging models, which are materialized as views.
+-   **Marts Models:** The final, user-facing models are built in the `marts` directory. This includes:
+    -   `dim_date`: A calendar dimension table.
+    -   `dim_company` and `dim_exchange`: Dimension tables that track historical changes using a Slowly Changing Dimension (SCD) Type 2 approach.
+    -   `fact_stock_price`: A central fact table that joins stock data with the dimensions, loaded incrementally to improve performance.
+-   **Data Quality:** The project includes data tests to validate the integrity and relationships within the final models.
 
-- URL: http://localhost:8080
-- Default credentials (if unchanged): airflow / airflow
+## Database Initialization
 
-The compose.yml mounts ./dags, ./dbt, and ./data into /opt/airflow/dags, /opt/airflow/dbt, and /opt/airflow/data inside containers.
+The `clickhouse_init/` directory contains SQL scripts crucial for setting up the ClickHouse database when the Docker environment starts.
 
-## 4. Environment Verification
-```bash
-# Check .env variables inside Airflow
-docker compose exec airflow-webserver bash -lc "env | grep -E 'DATA_DIR|DBT_TARGET|DBT_PROFILES_DIR'"
+-   **Schema Definition:** The `01_create_db_and_tables.sql` script defines the `sp600_stocks` database and all the necessary tables for storing daily stock data, S&P 500/600 components, company details, and exchange information.
+-   **Historical Data Loading:** The `02_load_historic_data.sql` script populates these newly created tables with historical data from predefined CSV files, ensuring the database has a foundational dataset upon initialization.
 
-# Verify ClickHouse connection
-docker compose exec clickhouse bash -lc "clickhouse-client -q 'SHOW DATABASES'"
-```
-If the database doesn't exist yet, you can create it using this:
-```bash
-docker compose exec clickhouse bash -lc "
-clickhouse-client -q \"
-CREATE DATABASE IF NOT EXISTS analytics;
-CREATE TABLE IF NOT EXISTS analytics.daily_stock_prices
-(
-  Date Date,
-  Ticker String,
-  Open Float64, High Float64, Low Float64, Close Float64,
-  AdjClose Float64, Volume UInt64
-)
-ENGINE = MergeTree
-PARTITION BY toYYYYMM(Date)
-ORDER BY (Ticker, Date);
-\"
-"
-```
-## 5. Running the Airflow DAGs
-1. Open the Airflow UI
+## Quick Start
 
-2. Enable and Trigger the following DAGs:
-   - daily_market_etl → Extracts daily prices, writes CSVs, ingests into ClickHouse, runs dbt transformations.
-   - monthly_reference_etl → Extracts monthly reference data, ingests it, runs dbt core, performs full-refresh gold models, and runs tests.
+Follow these steps to get the pipeline running from a clean state.
 
-All tasks run with the shared environment variable DATA_DIR
-dbt tasks execute in /opt/airflow/dbt.
+1.  **Navigate to the Docker Directory**
 
+    All commands should be run from the `Docker/` directory.
+    ```bash
+    cd Docker
+    ```
 
-## 6. Data Locations
-| Layer               | Location                                                  | Description                         |
-| ------------------- | --------------------------------------------------------- | ----------------------------------- |
-| Bronze              | `/opt/airflow/data/daily/` & `/opt/airflow/data/monthly/` | Raw CSV files extracted by Airflow. |
-| Bronze (ClickHouse) | `analytics.daily_stock_prices`                            | Ingested raw daily data.            |
-| Marts / Gold        | `analytics.dim_*` and `analytics.fact_*` tables           | dbt-transformed models.             |
+2.  **Clean Up Previous Runs (Optional)**
 
-## 7. dbt Usage
-Run dbt inside Airflow container
-```
-docker compose exec airflow-webserver bash -lc "cd /opt/airflow/dbt && dbt debug --profiles-dir . --target dev"
-docker compose exec airflow-webserver bash -lc "cd /opt/airflow/dbt && dbt run --profiles-dir . --target dev"
-docker compose exec airflow-webserver bash -lc "cd /opt/airflow/dbt && dbt test --profiles-dir . --target dev --select tag:gold"
-```
+    To ensure a completely fresh start, you can tear down any existing containers and volumes, and clear out the data from previous runs.
+    ```bash
+    docker compose down -v
+    rm -f data/daily/*
+    rm -f data/monthly/*
+    ```
 
-## 8. Airflow DAG visuals
-<img width="762" height="319" alt="daily_dag_schema" src="https://github.com/user-attachments/assets/534e18de-8013-4e54-b95d-9ebdf8f8e5b7" />
-<img width="756" height="325" alt="monthly_dag_schema" src="https://github.com/user-attachments/assets/14f3bd66-4d7c-4827-aad4-83316023a733" />
-<img width="955" height="505" alt="dags" src="https://github.com/user-attachments/assets/513eb8b3-56ac-4c3e-9b0c-47d3ff4c1786" />
+3.  **Launch the Environment**
 
+    Build fresh images and start all the services in detached mode.
+    ```bash
+    docker compose up --build -d
+    ```
+    Monitor the logs until you see the confirmation that the Airflow webserver is running and listening on port 8080.
 
+4.  **Access the Airflow UI**
 
-## 9. Example Analytical Queries
+    Once the services are running, open your web browser and navigate to:
+    [http://localhost:8080](http://localhost:8080)
 
+    Log in with the default credentials:
+    -   **Username:** `airflow`
+    -   **Password:** `airflow`
 
+5.  **Run the Pipelines**
 
-## 10. Common Issues
-| Problem                         | Cause                            | Fix                                                                                        |
-| ------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------ |
-| `FileNotFoundError` for CSV     | Wrong relative paths             | Use `DATA_DIR=/opt/airflow/data` and `os.path.join`.                                       |
-| `dbt_project.yml not found`     | Wrong dbt working directory      | Use `cd /opt/airflow/dbt && dbt run ...`                                                   |
-| `No target named prod`          | Missing target in `profiles.yml` | Set `DBT_TARGET=dev` in `.env`.                                                            |
-| `Missing columns in ClickHouse` | CSV was wide-format              | Ensure script outputs **long format** (`Date,Ticker,Open,High,Low,Close,AdjClose,Volume`). |
+    In the Airflow UI, you will see two DAGs.
 
+    -   First, enable the `daily_market_etl` DAG and wait for it to complete.
+    -   Then, enable the `monthly_reference_etl` DAG.
 
+6.  **Verify the Data in ClickHouse**
 
+    While the Docker environment is running, you can connect to the ClickHouse database to query the data.
+    ```bash
+    docker compose exec clickhouse clickhouse-client --database sp600_stocks
+    ```
+
+    Once inside the client, you can run queries to inspect the tables:
+    ```sql
+    SHOW TABLES;
+
+    SELECT count(*) FROM fact_stock_price;
+
+    SELECT * FROM dim_company LIMIT 5;
+    ```
