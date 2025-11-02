@@ -1,0 +1,143 @@
+docker compose exec -T clickhouse bash -lc '
+>> cat <<SQL | clickhouse-client --multiquery
+>> WITH
+>>   toDate(''2025-01-01'') AS q1_start,
+>>   toDate(''2025-03-31'') AS q1_end,
+>>   universe AS (
+>>     SELECT DISTINCT Symbol
+>>     FROM analytics.index_membership_snapshots m
+>>     WHERE (m.index_name, m.snapshot_date) IN (
+>>       SELECT index_name, max(snapshot_date)
+>>       FROM analytics.index_membership_snapshots
+>>       WHERE index_name IN (''sp500'',''sp600'')
+>>       GROUP BY index_name
+>>     )
+>>   ),
+>>   per_ticker AS (
+>>     SELECT
+>>       d.Ticker,
+>>       min(d.Date) AS min_d,
+>>       max(d.Date) AS max_d
+>>     FROM analytics.daily_stock_prices d
+>>     WHERE d.Date BETWEEN q1_start AND q1_end
+>>       AND d.Ticker IN (SELECT Symbol FROM universe)
+>>     GROUP BY d.Ticker
+>>   )
+>> SELECT
+>>   p.Ticker,
+>>   round(toFloat64(d1.Close), 6) AS start_close,
+>>   round(toFloat64(d2.Close), 6) AS end_close,
+>>   round( (toFloat64(d2.Close)/toFloat64(d1.Close) - 1.0) * 100.0, 4 ) AS pct_growth
+>> FROM per_ticker p
+>> INNER JOIN analytics.daily_stock_prices d1
+>>   ON d1.Ticker = p.Ticker AND d1.Date = p.min_d
+>> INNER JOIN analytics.daily_stock_prices d2
+>>   ON d2.Ticker = p.Ticker AND d2.Date = p.max_d
+>> ORDER BY pct_growth DESC
+>> LIMIT 10
+>> FORMAT Pretty;
+>> SQL
+>> '
+
+# this is a helper to get the results to q3
+┏━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ p.Ticker ┃ start_close ┃  end_close ┃ pct_growth ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ CORT     │   49.970001 │ 114.220001 │   128.5771 │
+├──────────┼─────────────┼────────────┼────────────┤
+│ CVS      │   42.753231 │  66.335213 │    55.1584 │
+├──────────┼─────────────┼────────────┼────────────┤
+│ MPW      │    3.827514 │   5.818595 │    52.0202 │
+├──────────┼─────────────┼────────────┼────────────┤
+│ PRA      │       15.71 │      23.35 │    48.6314 │
+├──────────┼─────────────┼────────────┼────────────┤
+│ PCRX     │       18.33 │      24.85 │    35.5701 │
+├──────────┼─────────────┼────────────┼────────────┤
+│ SNDK     │          36 │  47.610001 │      32.25 │
+├──────────┼─────────────┼────────────┼────────────┤
+│ PM       │  118.034264 │ 156.077286 │    32.2305 │
+├──────────┼─────────────┼────────────┼────────────┤
+│ DNOW     │       12.95 │      17.08 │    31.8919 │
+├──────────┼─────────────┼────────────┼────────────┤
+│ PLMR     │  104.379997 │ 137.080002 │    31.3278 │
+├──────────┼─────────────┼────────────┼────────────┤
+│ HCI      │   113.51487 │ 148.488556 │    30.8098 │
+└──────────┴─────────────┴────────────┴────────────┘
+
+
+docker compose exec -T clickhouse bash -lc '
+>> cat <<SQL | clickhouse-client --multiquery
+>> WITH
+>>   toDate(''2025-01-01'') AS q1_start,
+>>   toDate(''2025-03-31'') AS q1_end,
+>>   universe AS (
+>>     SELECT DISTINCT Symbol
+>>     FROM analytics.index_membership_snapshots m
+>>     WHERE (m.index_name, m.snapshot_date) IN (
+>>       SELECT index_name, max(snapshot_date)
+>>       FROM analytics.index_membership_snapshots
+>>       WHERE index_name IN (''sp500'',''sp600'')
+>>       GROUP BY index_name
+>>     )
+>>   ),
+>>   comp AS (
+>>     SELECT Symbol, anyLast(CompanyName) AS CompanyName, anyLast(Sector) AS Sector
+>>     FROM (
+>>       SELECT Symbol, CompanyName, Sector, snapshot_date,
+>>              row_number() OVER (PARTITION BY Symbol ORDER BY snapshot_date DESC) AS rn
+>>       FROM analytics.company_overview_snapshots
+>>     )
+>>     WHERE rn = 1
+>>     GROUP BY Symbol
+>>   ),
+>>   per_ticker AS (
+>>     SELECT
+>>       d.Ticker,
+>>       min(d.Date) AS min_d,
+>>       max(d.Date) AS max_d
+>>     FROM analytics.daily_stock_prices d
+>>     WHERE d.Date BETWEEN q1_start AND q1_end
+>>       AND d.Ticker IN (SELECT Symbol FROM universe)
+>>     GROUP BY d.Ticker
+>>   )
+>> SELECT
+>>   p.Ticker,
+>>   c.CompanyName,
+>>   c.Sector,
+>>   round( (toFloat64(d2.Close)/toFloat64(d1.Close) - 1.0) * 100.0, 2 ) AS pct_growth
+>> FROM per_ticker p
+>> JOIN analytics.daily_stock_prices d1
+>>   ON d1.Ticker = p.Ticker AND d1.Date = p.min_d
+>> JOIN analytics.daily_stock_prices d2
+>>   ON d2.Ticker = p.Ticker AND d2.Date = p.max_d
+>> LEFT JOIN comp c ON c.Symbol = p.Ticker
+>> ORDER BY pct_growth DESC
+>> LIMIT 10
+>> FORMAT Pretty;
+>> SQL
+>> '
+
+┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ p.Ticker ┃ c.CompanyName                     ┃ c.Sector           ┃ pct_growth ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ CORT     │ Corcept Therapeutics Incorporated │ Healthcare         │     128.58 │
+├──────────┼───────────────────────────────────┼────────────────────┼────────────┤
+│ CVS      │ CVS Health Corporation            │ Healthcare         │      55.16 │
+├──────────┼───────────────────────────────────┼────────────────────┼────────────┤
+│ MPW      │ Medical Properties Trust, Inc.    │ Real Estate        │      52.02 │
+├──────────┼───────────────────────────────────┼────────────────────┼────────────┤
+│ PRA      │ ProAssurance Corporation          │ Financial Services │      48.63 │
+├──────────┼───────────────────────────────────┼────────────────────┼────────────┤
+│ PCRX     │ Pacira BioSciences, Inc.          │ Healthcare         │      35.57 │
+├──────────┼───────────────────────────────────┼────────────────────┼────────────┤
+│ SNDK     │ Sandisk Corporation               │ Technology         │      32.25 │
+├──────────┼───────────────────────────────────┼────────────────────┼────────────┤
+│ PM       │ Philip Morris International Inc.  │ Consumer Defensive │      32.23 │
+├──────────┼───────────────────────────────────┼────────────────────┼────────────┤
+│ DNOW     │ DNOW Inc.                         │ Industrials        │      31.89 │
+├──────────┼───────────────────────────────────┼────────────────────┼────────────┤
+│ PLMR     │ Palomar Holdings, Inc.            │ Financial Services │      31.33 │
+├──────────┼───────────────────────────────────┼────────────────────┼────────────┤
+│ HCI      │ HCI Group, Inc.                   │ Financial Services │      30.81 │
+
+# Corresponding csv file with the answers is top10_growth_q1.csv
