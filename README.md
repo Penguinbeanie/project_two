@@ -129,9 +129,12 @@ docker compose exec airflow-webserver bash -lc "cd /opt/airflow/dbt && dbt test 
 
 
 ## 9. Example Analytical Queries
-The example analytical queries are the following:
-
-For the 5th query we decided to look at it from many aspects:
+The example analytical queries can be found under docker/sql/analytics_queries.sql
+The answers to the queries can be founbd under docker/analysis_results.
+For the 5th query (Sector composition of S&P companies (2000–2025)) we decided to look at it from many aspects:
+- Sector evolution by decade
+- Sector comparison 2000 vs 2025
+- Sector growth trends
 
 
 
