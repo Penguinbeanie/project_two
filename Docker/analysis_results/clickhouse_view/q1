@@ -47,10 +47,4 @@ docker compose exec -T clickhouse bash -lc '
 >> SQL
 >> '
 
-┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
-┃ Sector             ┃ Ticker ┃ CompanyName                   ┃ total_volume ┃
-┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
-│ Financial Services │ AAMI   │ Acadian Asset Management Inc. │       226300 │
-├────────────────────┼────────┼───────────────────────────────┼──────────────┤
-│ Healthcare         │ A      │ Agilent Technologies, Inc.    │      2184500 │
-└────────────────────┴────────┴───────────────────────────────┴──────────────┘
+The answer can be found in the top3_volume_per_sector_q1.csv file
