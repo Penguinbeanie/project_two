@@ -41,10 +41,4 @@ docker compose exec -T clickhouse bash -lc '
 >> SQL
 >> '
 
-┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┓
-┃ d.Ticker ┃ c.CompanyName                 ┃ c.Sector           ┃ avg_rel_volatility ┃
-┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━┩
-│ AAMI     │ Acadian Asset Management Inc. │ Financial Services │             0.0279 │
-├──────────┼───────────────────────────────┼────────────────────┼────────────────────┤
-│ A        │ Agilent Technologies, Inc.    │ Healthcare         │             0.0264 │
-└──────────┴───────────────────────────────┴────────────────────┴────────────────────┘
+The answer to this can fe found in top5_volatility_q1.csv file.
