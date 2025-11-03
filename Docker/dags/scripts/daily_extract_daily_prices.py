@@ -1,28 +1,49 @@
-﻿import yfinance as yf
+import yfinance as yf
 import pandas as pd
 from datetime import date
 from datetime import timedelta
 import sys
 import os
 
-# Extracting current date
+# Extracting current date and determining the correct start date
 today_date_obj = date.today()
-yesterday_date_obj = today_date_obj - timedelta(days=1)
-today_str = today_date_obj.strftime("%Y-%m-%d")
-yesterday_str = yesterday_date_obj.strftime("%Y-%m-%d")
-today_file = today_date_obj.strftime("%Y_%m_%d")
+weekday = today_date_obj.weekday()
+
+if weekday == 0:
+    start_date_obj = today_date_obj - timedelta(days=3)
+elif weekday == 6:
+    start_date_obj = today_date_obj - timedelta(days=2)
+else:
+    start_date_obj = today_date_obj - timedelta(days=1)
+
+end_date_obj = start_date_obj + timedelta(days=1)
+
+# Define the date strings
+start_date_str = start_date_obj.strftime("%Y-%m-%d")
+end_date_str = end_date_obj.strftime("%Y-%m-%d")
+
+# Define the file name
+data_date_file_str = start_date_obj.strftime("%Y_%m_%d")
 
 # Extracting Tickers
-df_500 = pd.read_csv(os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", "sp500_components.csv"))
-df_600 = pd.read_csv(os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", "sp600_components.csv"))
+df_500 = pd.read_csv(
+    os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", "sp500_components.csv")
+)
+df_600 = pd.read_csv(
+    os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", "sp600_components.csv")
+)
 
 df_comb = pd.concat([df_500.iloc[:, 0], df_600.iloc[:, 0]])
 
 # --- Configuration ---
 TICKERS = df_comb.tolist()
-START_DATE = yesterday_str
-END_DATE = today_str  # The current date, to get the latest data
-OUTPUT_FILE = os.path.join(os.getenv("DATA_DIR", "../../data"), "daily", f"{today_file}_daily_stock_data.csv")
+START_DATE = start_date_str
+END_DATE = end_date_str
+OUTPUT_FILE = os.path.join(
+    os.getenv("DATA_DIR", "../../data"),
+    "daily",
+    f"{data_date_file_str}_daily_stock_data.csv",
+)
 
 print(f"Fetching daily data for {TICKERS}...")
 
