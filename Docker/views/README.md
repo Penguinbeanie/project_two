@@ -10,11 +10,33 @@ This project implements role-based access control (RBAC) with column-level secur
 - Full SELECT access to all gold layer and its views
 - Can see all columns including sensitive data
 
+| # | Name                 |
+| - | -------------------- |
+| 1 | `dim_company`        |
+| 2 | `dim_company_v`      |
+| 3 | `dim_date`           |
+| 4 | `dim_date_v`         |
+| 5 | `dim_exchange`       |
+| 6 | `dim_exchange_v`     |
+| 7 | `fact_stock_price`   |
+| 8 | `fact_stock_price_v` |
+
+
 #### 2. analyst_limited
 - Column-level grants on `dim_company` (excludes 3 sensitive columns)
 - **Cannot** access `company_name`, `headquarters_country`, `website_url` directly
 - **Cannot** perform `SELECT *` on `dim_company` (attempts to access restricted columns will fail)
 - Must query through `dim_company_limited_v` view for complete data with pseudonymization
+| # | Name                         |
+| - | ---------------------------- |
+| 1 | `dim_company`                |
+| 2 | `dim_company_limited_v`      |
+| 3 | `dim_date`                   |
+| 4 | `dim_date_limited_v`         |
+| 5 | `dim_exchange`               |
+| 6 | `dim_exchange_limited_v`     |
+| 7 | `fact_stock_price`           |
+| 8 | `fact_stock_price_limited_v` |
 
 
 ### Technical Implementation
