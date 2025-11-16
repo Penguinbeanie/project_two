@@ -77,8 +77,13 @@ SELECT * FROM sp600_stocks.dim_company_limited_v LIMIT 3;
 | 10503953690831840687 | AAMI   | Financial Services | Asset Management       | 383            | New York Stock Exchange | 2025-11-16 | NULL     | 1          | Aca***       | Un**                 | https://***.com |
 | 16774863976635419370 | AAP    | Consumer Cyclical  | Auto Parts             | 33200          | New York Stock Exchange | 2025-11-16 | NULL     | 1          | Adv***       | Un**                 | https://***.com |
 
-
-
+```sql
+-- ❌ This fails - no access to sensitive column
+SELECT company_name FROM sp600_stocks.dim_company LIMIT 1;
+```
+```text
+Received exception from server (version 24.8.14):
+Code: 497. DB::Exception: Received from localhost:9000. DB::Exception: limited_analyst: Not enough privileges. To execute this query, it's necessary to have the grant SELECT(company_name) ON sp600_stocks.dim_company. (ACCESS_DENIED)
 
 with unlimited user:
  ```bash
