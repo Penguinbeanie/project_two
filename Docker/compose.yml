@@ -2,7 +2,7 @@
 
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:24.8-alpine
+    image: clickhouse/clickhouse-server:24.8-alpine # newer version of clickhouse
     container_name: clickhouse
     ports:
       - "8123:8123"  # HTTP interface
@@ -106,3 +106,4 @@ volumes:
   clickhouse_data:
 
   postgres_data:
+
