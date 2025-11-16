@@ -27,6 +27,7 @@ This project implements role-based access control (RBAC) with column-level secur
 - **Cannot** access `company_name`, `headquarters_country`, `website_url` directly
 - **Cannot** perform `SELECT *` on `dim_company` (attempts to access restricted columns will fail)
 - Must query through `dim_company_limited_v` view for complete data with pseudonymization
+
 | # | Name                         |
 | - | ---------------------------- |
 | 1 | `dim_company`                |
