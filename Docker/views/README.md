@@ -101,6 +101,58 @@ SELECT company_name FROM sp600_stocks.dim_company LIMIT 1;
 Received exception from server (version 24.8.14):
 Code: 497. DB::Exception: Received from localhost:9000. DB::Exception: limited_analyst: Not enough privileges. To execute this query, it's necessary to have the grant SELECT(company_name) ON sp600_stocks.dim_company. (ACCESS_DENIED)
 ```
+
+```sql
+SELECT 
+    c.sector, 
+    c.company_name,  -- This will show masked data (e.g., "App***")
+    SUM(f.volume) AS total_volume
+FROM sp600_stocks.fact_stock_price_limited_v f
+INNER JOIN sp600_stocks.dim_company_limited_v c ON f.company_id = c.company_id
+INNER JOIN sp600_stocks.dim_date_limited_v d ON f.date_id = d.date_id
+WHERE d.year = 2025 AND d.quarter = 1
+GROUP BY c.sector, c.company_name
+ORDER BY c.sector, total_volume DESC
+LIMIT 3 BY c.sector;
+```
+
+| sector                 | company_name | total_volume   |
+| ---------------------- | ------------ | -------------- |
+| Basic Materials        | Hec***       | 2,306,331,200  |
+| Basic Materials        | Fre***       | 1,928,831,400  |
+| Basic Materials        | New***       | 1,234,419,400  |
+| Communication Services | Alp***       | 6,119,401,000  |
+| Communication Services | AT&***       | 5,055,227,800  |
+| Communication Services | War***       | 4,258,502,600  |
+| Consumer Cyclical      | For***       | 12,037,247,000 |
+| Consumer Cyclical      | Tes***       | 11,622,656,000 |
+| Consumer Cyclical      | Ama***       | 4,805,825,000  |
+| Consumer Defensive     | The***       | 6,796,864,400  |
+| Consumer Defensive     | Wal***       | 2,450,345,000  |
+| Consumer Defensive     | Mon***       | 2,059,655,200  |
+| Energy                 | Exx***       | 1,936,474,400  |
+| Energy                 | SLB***       | 1,850,996,600  |
+| Energy                 | Kin***       | 1,844,731,200  |
+| Financial Services     | Ban***       | 5,103,976,200  |
+| Financial Services     | MAR***       | 4,626,919,200  |
+| Financial Services     | Rob***       | 4,320,932,200  |
+| Healthcare             | Pfi***       | 5,438,017,000  |
+| Healthcare             | Mer***       | 1,998,581,000  |
+| Healthcare             | Abb***       | 1,600,143,200  |
+| Industrials            | Jet***       | 2,813,824,800  |
+| Industrials            | Uni***       | 2,132,430,400  |
+| Industrials            | CSX***       | 1,779,322,800  |
+| Real Estate            | Med***       | 1,497,149,200  |
+| Real Estate            | Hos***       | 1,059,462,800  |
+| Real Estate            | Rea***       | 969,665,600    |
+| Technology             | NVI***       | 33,763,163,000 |
+| Technology             | Int***       | 12,820,724,800 |
+| Technology             | Pal***       | 12,554,576,400 |
+| Utilities              | PG&***       | 2,835,697,800  |
+| Utilities              | The***       | 2,464,643,600  |
+| Utilities              | Nex***       | 1,407,906,600  |
+
+
 **with unlimited user:**
  ```bash
 docker exec -it clickhouse clickhouse-client --user=full_analyst --password=secure_password_123
@@ -123,3 +175,53 @@ SELECT company_name, headquarters_country FROM sp600_stocks.dim_company LIMIT 3;
 | Agilent Technologies, Inc.    | United States        |
 | Acadian Asset Management Inc. | United States        |
 | Advance Auto Parts, Inc.      | United States        |
+
+```sql
+SELECT 
+    c.sector, 
+    c.company_name,  -- This will show full data (e.g., "Apple Inc.")
+    SUM(f.volume) AS total_volume
+FROM sp600_stocks.fact_stock_price_v f
+INNER JOIN sp600_stocks.dim_company_v c ON f.company_id = c.company_id
+INNER JOIN sp600_stocks.dim_date_v d ON f.date_id = d.date_id
+WHERE d.year = 2025 AND d.quarter = 1
+GROUP BY c.sector, c.company_name
+ORDER BY c.sector, total_volume DESC
+LIMIT 3 BY c.sector;
+```
+
+| sector                 | company_name                   | total_volume   |
+| ---------------------- | ------------------------------ | -------------- |
+| Basic Materials        | Hecla Mining Company           | 2,306,331,200  |
+| Basic Materials        | Freeport-McMoRan Inc.          | 1,928,831,400  |
+| Basic Materials        | Newmont Corporation            | 1,234,419,400  |
+| Communication Services | Alphabet Inc.                  | 6,119,401,000  |
+| Communication Services | AT&T Inc.                      | 5,055,227,800  |
+| Communication Services | Warner Bros. Discovery, Inc.   | 4,258,502,600  |
+| Consumer Cyclical      | Ford Motor Company             | 12,037,247,000 |
+| Consumer Cyclical      | Tesla, Inc.                    | 11,622,656,000 |
+| Consumer Cyclical      | Amazon.com, Inc.               | 4,805,825,000  |
+| Consumer Defensive     | Walmart Inc.                   | 2,450,345,000  |
+| Consumer Defensive     | The Coca-Cola Company          | 2,184,861,400  |
+| Consumer Defensive     | Kenvue Inc.                    | 1,795,803,600  |
+| Energy                 | Exxon Mobil Corporation        | 1,936,474,400  |
+| Energy                 | SLB N.V.                       | 1,850,996,600  |
+| Energy                 | Kinder Morgan, Inc.            | 1,746,061,800  |
+| Financial Services     | Bank of America Corporation    | 4,652,304,400  |
+| Financial Services     | MARA Holdings, Inc.            | 4,626,919,200  |
+| Financial Services     | Robinhood Markets, Inc.        | 4,320,932,200  |
+| Healthcare             | Pfizer Inc.                    | 5,438,017,000  |
+| Healthcare             | Merck & Co., Inc.              | 1,925,854,200  |
+| Healthcare             | Viatris Inc.                   | 1,599,761,600  |
+| Industrials            | JetBlue Airways Corporation    | 2,813,824,800  |
+| Industrials            | CSX Corporation                | 1,779,322,800  |
+| Industrials            | Southwest Airlines Co.         | 1,300,953,400  |
+| Real Estate            | Medical Properties Trust, Inc. | 1,497,149,200  |
+| Real Estate            | Host Hotels & Resorts, Inc.    | 1,059,462,800  |
+| Real Estate            | VICI Properties Inc.           | 865,722,600    |
+| Technology             | NVIDIA Corporation             | 33,763,163,000 |
+| Technology             | Intel Corporation              | 11,974,755,200 |
+| Technology             | Palantir Technologies Inc.     | 11,872,756,200 |
+| Utilities              | PG&E Corporation               | 2,835,697,800  |
+| Utilities              | The AES Corporation            | 1,849,701,200  |
+| Utilities              | NextEra Energy, Inc.           | 1,407,906,600  |
