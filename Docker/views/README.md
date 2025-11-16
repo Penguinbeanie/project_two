@@ -44,12 +44,7 @@ The following 3 columns are pseudonymized for `analyst_limited`:
 - ClickHouse 24.4+ (for SQL SECURITY DEFINER support)
 - Admin user
 
-### Step-by-Step Setup
-
-#### 1. Create Analytical Views
-
 Run the SQL script to create full and limited access views:
-```bash
 ## ClickHouse Setup & Queries
 ### 1.Creating views
 Run the SQL scripts to create views:
@@ -62,13 +57,12 @@ Execute the SQL script to add users and roles:
 docker exec -i clickhouse clickhouse-client --multiquery --user=admin_user --password=admin123 < views/01_create_roles_and_users.sql
 ```
 ### 3.Connect to the Client: To start an interactive SQL session, run:
-with limited user:
+**with limited user:**
  ```bash
 docker exec -it clickhouse clickhouse-client --user=limited_analyst --password=secure_password_456
  ```
 **Try these queries:**
 ```sql
--- ✅ This works - masked data
 SELECT * FROM sp600_stocks.dim_company_limited_v LIMIT 3;
 ```
 | company_id           | symbol | sector             | industry               | employee_count | exchange_code           | valid_from | valid_to | is_current | company_name | headquarters_country | website_url     |
@@ -78,16 +72,31 @@ SELECT * FROM sp600_stocks.dim_company_limited_v LIMIT 3;
 | 16774863976635419370 | AAP    | Consumer Cyclical  | Auto Parts             | 33200          | New York Stock Exchange | 2025-11-16 | NULL     | 1          | Adv***       | Un**                 | https://***.com |
 
 ```sql
--- ❌ This fails - no access to sensitive column
 SELECT company_name FROM sp600_stocks.dim_company LIMIT 1;
 ```
 ```text
 Received exception from server (version 24.8.14):
 Code: 497. DB::Exception: Received from localhost:9000. DB::Exception: limited_analyst: Not enough privileges. To execute this query, it's necessary to have the grant SELECT(company_name) ON sp600_stocks.dim_company. (ACCESS_DENIED)
-
-with unlimited user:
+```
+**with unlimited user:**
  ```bash
 docker exec -it clickhouse clickhouse-client --user=full_analyst --password=secure_password_123
  ```
 You should see a prompt like `clickhouse-server :)`. You are now ready to run queries!
-
+**Try these queries:**
+```sql
+SELECT * FROM sp600_stocks.dim_company_v LIMIT 3;
+```
+| company_id           | symbol | company_name                  | sector             | industry               | headquarters_country | website_url                                                            | employee_count | exchange_code           | valid_from | valid_to | is_current |
+| -------------------- | ------ | ----------------------------- | ------------------ | ---------------------- | -------------------- | ---------------------------------------------------------------------- | -------------- | ----------------------- | ---------- | -------- | ---------- |
+| 3397809020744382953  | A      | Agilent Technologies, Inc.    | Healthcare         | Diagnostics & Research | United States        | [https://www.agilent.com](https://www.agilent.com)                     | 18000          | New York Stock Exchange | 2025-11-16 | NULL     | 1          |
+| 10503953690831840687 | AAMI   | Acadian Asset Management Inc. | Financial Services | Asset Management       | United States        | [https://www.bsig.com](https://www.bsig.com)                           | 383            | New York Stock Exchange | 2025-11-16 | NULL     | 1          |
+| 16774863976635419370 | AAP    | Advance Auto Parts, Inc.      | Consumer Cyclical  | Auto Parts             | United States        | [https://shop.advanceautoparts.com](https://shop.advanceautoparts.com) | 33200          | New York Stock Exchange | 2025-11-16 | NULL     | 1          |
+```sql
+SELECT company_name, headquarters_country FROM sp600_stocks.dim_company LIMIT 3;
+```
+| company_name                  | headquarters_country |
+| ----------------------------- | -------------------- |
+| Agilent Technologies, Inc.    | United States        |
+| Acadian Asset Management Inc. | United States        |
+| Advance Auto Parts, Inc.      | United States        |
