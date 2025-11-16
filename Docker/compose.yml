@@ -2,20 +2,20 @@
 
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:23.8
+    image: clickhouse/clickhouse-server:24.8-alpine
     container_name: clickhouse
     ports:
       - "8123:8123"  # HTTP interface
       - "9000:9000"  # Native interface
     environment:
       CLICKHOUSE_DB: sp600_stocks
-      CLICKHOUSE_USER: default
-      CLICKHOUSE_PASSWORD: ""
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./data:/var/lib/clickhouse/user_files
       - ./clickhouse_config:/etc/clickhouse-server/config.d
       - ./clickhouse_init:/docker-entrypoint-initdb.d
+      - ./clickhouse_users:/etc/clickhouse-server/users.d
+
     healthcheck:
       test: ["CMD-SHELL", "clickhouse-client --query='SELECT 1' || exit 1"]
       interval: 10s
