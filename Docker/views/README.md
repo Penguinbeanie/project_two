@@ -71,13 +71,12 @@ docker exec -it clickhouse clickhouse-client --user=limited_analyst --password=s
 -- ✅ This works - masked data
 SELECT * FROM sp600_stocks.dim_company_limited_v LIMIT 3;
 ```
-┌──────────────────────┬────────┬────────────────────┬────────────────────────┬────────────────┬─────────────────────────┬────────────┬──────────┬────────────┬──────────────┬──────────────────────┬─────────────────┐
-│         company_id    │ symbol │ sector             │ industry               │ employee_count │      exchange_code       │ valid_from │ valid_to │ is_current │ company_name │ headquarters_country │   website_url    │
-└──────────────────────┴────────┴────────────────────┴────────────────────────┴────────────────┴─────────────────────────┴────────────┴──────────┴────────────┴──────────────┴──────────────────────┴─────────────────┘
-│  3397809020744382953 │ A      │ Healthcare         │ Diagnostics & Research │          18000 │ New York Stock Exchange │ 2025-11-16 │   NULL   │          1 │ Agi***       │ Un**                 │ https://***.com │
-│ 10503953690831840687 │ AAMI   │ Financial Services │ Asset Management       │            383 │ New York Stock Exchange │ 2025-11-16 │   NULL   │          1 │ Aca***       │ Un**                 │ https://***.com │
-│ 16774863976635419370 │ AAP    │ Consumer Cyclical  │ Auto Parts             │          33200 │ New York Stock Exchange │ 2025-11-16 │   NULL   │          1 │ Adv***       │ Un**                 │ https://***.com │
-└──────────────────────┴────────┴────────────────────┴────────────────────────┴────────────────┴─────────────────────────┴────────────┴──────────┴────────────┴──────────────┴──────────────────────┴─────────────────┘
+| company_id           | symbol | sector             | industry               | employee_count | exchange_code           | valid_from | valid_to | is_current | company_name | headquarters_country | website_url     |
+| -------------------- | ------ | ------------------ | ---------------------- | -------------- | ----------------------- | ---------- | -------- | ---------- | ------------ | -------------------- | --------------- |
+| 3397809020744382953  | A      | Healthcare         | Diagnostics & Research | 18000          | New York Stock Exchange | 2025-11-16 | NULL     | 1          | Agi***       | Un**                 | https://***.com |
+| 10503953690831840687 | AAMI   | Financial Services | Asset Management       | 383            | New York Stock Exchange | 2025-11-16 | NULL     | 1          | Aca***       | Un**                 | https://***.com |
+| 16774863976635419370 | AAP    | Consumer Cyclical  | Auto Parts             | 33200          | New York Stock Exchange | 2025-11-16 | NULL     | 1          | Adv***       | Un**                 | https://***.com |
+
 
 
 
