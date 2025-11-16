@@ -14,7 +14,7 @@ services:
       - ./data:/var/lib/clickhouse/user_files
       - ./clickhouse_config:/etc/clickhouse-server/config.d
       - ./clickhouse_init:/docker-entrypoint-initdb.d
-      - ./clickhouse_users:/etc/clickhouse-server/users.d
+      - ./clickhouse_users:/etc/clickhouse-server/users.d   # added admin
 
     healthcheck:
       test: ["CMD-SHELL", "clickhouse-client --query='SELECT 1' || exit 1"]
@@ -104,4 +104,5 @@ services:
 
 volumes:
   clickhouse_data:
+
   postgres_data:
