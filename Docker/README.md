@@ -66,3 +66,19 @@ docker exec -it airflow-scheduler python3 /opt/airflow/dags/scripts/ingest_month
     - Inserts data into `company_details` from `historic/2025_10_19_company_overview_data.csv`.
     - Inserts data into `exchanges` from `historic/wikipedia_exchange_information.csv`, skipping the header row.
 
+
+(For Superset) Changes made to the existing project 2:
+
+1. Clickhouse password and user are now: default and default. This change is alse reflected in the dbt profile and ingestion scripts.
+      Reason: empty password caused connection issues with superset
+
+2. compose.yml now includes the following for each service:
+      networks:
+        shared-analytics-net:
+          external: true
+      Reason: this was needed to run multiple containers on the same network so that they can communicate
+
+      Before running the compose file, run the following command to establish the network:
+            ```bash
+            docker network create shared-analytics-net
+            ```
