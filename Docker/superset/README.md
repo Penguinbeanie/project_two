@@ -42,6 +42,10 @@ Then, to start the services, navigate to the directory containing `docker-compos
 docker-compose up -d
 ```
 
-To connect Apache Superset to the Clickhouse database, use the following URI:
+(Optional) To connect Apache Superset to the Clickhouse database, use the following URI:
 
   clickhousedb://default:default@clickhouse:8123/sp600_stocks
+
+To load the existing dashboard, import the .zip found at:
+  "Docker/superset/data_engineering_dashboard/dashboard_export_20251120T153159.zip"
+When asked for the password, enter: "default"

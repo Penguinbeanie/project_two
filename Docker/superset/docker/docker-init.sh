@@ -80,6 +80,4 @@ if [ "$SUPERSET_LOAD_EXAMPLES" = "yes" ]; then
     echo_step "4" "Complete" "Loading examples"
 fi
 
-echo "--- Importing Data Engineering Dashboard ---"
-superset import-dashboards --path /app/data_engineering_dashboard/dashboard_export_20251120T153159.zip --username admin
-echo "--- Data Engineering Dashboard Imported ---"
+
