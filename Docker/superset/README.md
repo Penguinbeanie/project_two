@@ -42,6 +42,8 @@ Then, to start the services, navigate to the directory containing `docker-compos
 docker-compose up -d
 ```
 
+Open http://localhost:8088 and enter the username: "admin" and password: "admin".
+
 (Optional) To connect Apache Superset to the Clickhouse database, use the following URI:
 
   clickhousedb://default:default@clickhouse:8123/sp600_stocks
