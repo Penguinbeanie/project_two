@@ -1,7 +1,9 @@
-﻿import os
+import os
 import time
-from clickhouse_driver import Client
 from datetime import datetime
+
+from clickhouse_driver import Client
+
 
 # --------------------------
 # ClickHouse connection
@@ -11,32 +13,36 @@ def create_client():
     for attempt in range(10):
         try:
             client = Client(
-                host='clickhouse',
+                host="clickhouse",
                 port=9000,
-                user='default',
-                password='',
-                database='sp600_stocks'
+                user="default",
+                password="default",
+                database="sp600_stocks",
             )
             client.execute("SELECT 1")
             print("Connected to ClickHouse")
             return client
         except Exception:
-            print(f"ClickHouse not ready, retrying ({attempt+1}/10)...")
+            print(f"ClickHouse not ready, retrying ({attempt + 1}/10)...")
             time.sleep(5)
     raise Exception("Failed to connect to ClickHouse after 10 retries")
+
 
 # --------------------------
 # Helper functions
 # --------------------------
 BASE_AIRFLOW_FILES = "/opt/airflow/data"
 
+
 def get_airflow_path(subdir, filename):
     """Return full path for file system access from Airflow container"""
     return os.path.join(BASE_AIRFLOW_FILES, subdir, filename)
 
+
 def get_clickhouse_path(subdir, filename):
     """Return relative path for ClickHouse file() function"""
     return os.path.join(subdir, filename)
+
 
 def list_files(subdir, suffix):
     """Return sorted list of files in a folder ending with suffix"""
@@ -48,15 +54,17 @@ def list_files(subdir, suffix):
     print(f"Found {len(files)} files in {folder} matching '*{suffix}'")
     return files
 
+
 def is_file_empty(file_path):
     """Check if file only contains headers (1 line)"""
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             lines = f.readlines()
             return len(lines) <= 1  # Only header or empty
     except Exception as e:
         print(f"Error checking file {file_path}: {e}")
         return True
+
 
 # --------------------------
 # Daily Ingestion functions - UPDATED TABLE NAMES
@@ -70,16 +78,18 @@ def ingest_daily_stock_data(client):
     latest_file = daily_files[-1]
     airflow_path = get_airflow_path("daily", latest_file)
     ch_path = get_clickhouse_path("daily", latest_file)
-    
+
     if not os.path.exists(airflow_path):
         print(f"ERROR: File not found at {airflow_path}")
         return
-    
+
     # Check if file is empty (only headers)
     if is_file_empty(airflow_path):
-        print(f"File {airflow_path} contains no data (only headers), skipping ingestion.")
+        print(
+            f"File {airflow_path} contains no data (only headers), skipping ingestion."
+        )
         return
-        
+
     print(f"Loading daily stock data from {airflow_path}")
     print(f"ClickHouse will read from: {ch_path}")
     client.execute(f"""
@@ -98,6 +108,7 @@ def ingest_daily_stock_data(client):
     """)
     print("Daily stock data loaded.")
 
+
 def ingest_sp500_components(client):
     """Ingest SP500 components from fixed file"""
     daily_files = list_files("daily", "sp500_components.csv")
@@ -107,16 +118,16 @@ def ingest_sp500_components(client):
     latest_file = daily_files[0]
     airflow_path = get_airflow_path("daily", latest_file)
     ch_path = get_clickhouse_path("daily", latest_file)
-    
+
     if not os.path.exists(airflow_path):
         print(f"File not found: {airflow_path}, skipping SP500 ingestion.")
         return
-    
+
     # Check if file is empty
     if is_file_empty(airflow_path):
         print(f"File {airflow_path} contains no data, skipping ingestion.")
         return
-        
+
     print(f"Loading SP500 components from {airflow_path}")
     print(f"ClickHouse will read from: {ch_path}")
     client.execute(f"""
@@ -137,6 +148,7 @@ def ingest_sp500_components(client):
           'Symbol String, Security String, `GICS Sector` String, `GICS Sub-Industry` String, `Headquarters Location` String, `Date added` String, CIK String, Founded String')
     """)
     print("SP500 component data loaded.")
+
 
 def ingest_sp600_components(client):
     """Ingest SP600 components from fixed file"""
@@ -175,6 +187,7 @@ def ingest_sp600_components(client):
         FROM file('{ch_path}', 'CSVWithNames')
     """)
     print("SP600 component data loaded.")
+
 
 # --------------------------
 # Main

@@ -1,7 +1,9 @@
 import os
 import time
-from clickhouse_driver import Client
 from datetime import datetime
+
+from clickhouse_driver import Client
+
 
 # --------------------------
 # ClickHouse connection
@@ -11,32 +13,36 @@ def create_client():
     for attempt in range(10):
         try:
             client = Client(
-                host='clickhouse',
+                host="clickhouse",
                 port=9000,
-                user='default',
-                password='',
-                database='sp600_stocks'
+                user="default",
+                password="default",
+                database="sp600_stocks",
             )
             client.execute("SELECT 1")
             print("Connected to ClickHouse")
             return client
         except Exception:
-            print(f"ClickHouse not ready, retrying ({attempt+1}/10)...")
+            print(f"ClickHouse not ready, retrying ({attempt + 1}/10)...")
             time.sleep(5)
     raise Exception("Failed to connect to ClickHouse after 10 retries")
+
 
 # --------------------------
 # Helper functions
 # --------------------------
 BASE_AIRFLOW_FILES = "/opt/airflow/data"
 
+
 def get_airflow_path(subdir, filename):
     """Return full path for file system access from Airflow container"""
     return os.path.join(BASE_AIRFLOW_FILES, subdir, filename)
 
+
 def get_clickhouse_path(subdir, filename):
     """Return relative path for ClickHouse file() function"""
     return os.path.join(subdir, filename)
+
 
 def list_files(subdir, suffix):
     """Return sorted list of files in a folder ending with suffix"""
@@ -48,9 +54,11 @@ def list_files(subdir, suffix):
     print(f"Found {len(files)} files in {folder} matching '*{suffix}'")
     return files
 
+
 # --------------------------
 # Ingestion functions
 # --------------------------
+
 
 def ingest_monthly_company_overview(client):
     monthly_files = list_files("monthly", "_company_overview_data.csv")
@@ -84,6 +92,7 @@ def ingest_monthly_company_overview(client):
         FROM file('{ch_path}', 'CSVWithNames')
     """)
     print("Monthly company overview loaded.")
+
 
 def ingest_monthly_exchange_data(client):
     monthly_files = list_files("monthly", "_exchange_information.csv")
@@ -121,6 +130,7 @@ def ingest_monthly_exchange_data(client):
     """)
     print("Exchange data loaded.")
 
+
 # --------------------------
 # Main loop
 # --------------------------
@@ -130,6 +140,5 @@ if __name__ == "__main__":
     print("=== Starting Monthly Data Ingestion ===")
     ingest_monthly_company_overview(client)
     ingest_monthly_exchange_data(client)
-    
 
     print("=== Monthly ingestion cycle complete ===")

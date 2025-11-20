@@ -10,14 +10,18 @@ services:
     environment:
       CLICKHOUSE_DB: sp600_stocks
       CLICKHOUSE_USER: default
-      CLICKHOUSE_PASSWORD: ""
+      CLICKHOUSE_PASSWORD: default
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./data:/var/lib/clickhouse/user_files
       - ./clickhouse_config:/etc/clickhouse-server/config.d
       - ./clickhouse_init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "clickhouse-client --query='SELECT 1' || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "clickhouse-client --user=default --password=default --query='SELECT 1' || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
