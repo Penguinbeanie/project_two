@@ -73,4 +73,4 @@ Docker/logs/
 dbt/logs/
 
 # Pipeline outputs
-data/
+/data/
