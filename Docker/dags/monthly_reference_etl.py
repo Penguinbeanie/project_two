@@ -50,34 +50,11 @@ with DAG(
         env=base_env,
     )
 
-    # --- dbt core models (incremental silver layer) ---
-    dbt_run_silver = BashOperator(
-        task_id="dbt_run_silver",
-        bash_command=(
-            f"cd {DBT_DIR} && "
-            f"dbt run --select tag:silver"
-        ),
+    dbt_run = BashOperator(
+        task_id="dbt_run",
+        bash_command=(f"cd {DBT_DIR} && dbt run"),
         env=base_env,
+        dag=dag,
     )
 
-    # --- Refresh gold layer (full refresh) ---
-    dbt_refresh_gold = BashOperator(
-        task_id="dbt_refresh_gold",
-        bash_command=(
-            f"cd {DBT_DIR} && "
-            f"dbt run --full-refresh --select tag:gold"
-        ),
-        env=base_env,
-    )
-
-    # --- Optional: dbt tests on gold models ---
-    dbt_test_gold = BashOperator(
-        task_id="dbt_test_gold",
-        bash_command=(
-            f"cd {DBT_DIR} && "
-            f"dbt test --select tag:gold"
-        ),
-        env=base_env,
-    )
-
-    [extract_exchanges, extract_company_overview] >> ingest_monthly_data >> dbt_run_silver >> dbt_refresh_gold >> dbt_test_gold
+    [extract_exchanges, extract_company_overview] >> ingest_monthly_data >> dbt_run
