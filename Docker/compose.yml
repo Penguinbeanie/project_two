@@ -10,7 +10,7 @@ services:
     environment:
       CLICKHOUSE_DB: sp600_stocks
       CLICKHOUSE_USER: default
-      CLICKHOUSE_PASSWORD: ""
+      CLICKHOUSE_PASSWORD: default
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./data:/var/lib/clickhouse/user_files
@@ -105,3 +105,8 @@ services:
 volumes:
   clickhouse_data:
   postgres_data:
+
+networks:
+  default:
+    name: shared-analytics-net
+    external: true
