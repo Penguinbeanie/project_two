@@ -204,7 +204,7 @@ services:
     ports:
       - "127.0.0.1:9001:9000"  # exposing the dynamic webpack dev server
     container_name: superset_node
-    command: ["/app/docker/docker-frontend.sh"]
+    command: ["bash", "-c", "apt-get update && apt-get install -y npm && /app/docker/docker-frontend.sh"]
     volumes:
       - ./docker:/app/docker
       - ./superset:/app/superset
