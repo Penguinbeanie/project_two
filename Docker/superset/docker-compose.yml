@@ -205,7 +205,17 @@ services:
       - "127.0.0.1:9001:9000"  # exposing the dynamic webpack dev server
     container_name: superset_node
     command: ["/app/docker/docker-frontend.sh"]
-    volumes: *superset-volumes
+    volumes:
+      - ./docker:/app/docker
+      - ./superset:/app/superset
+      - ./superset-core:/app/superset-core
+      - ./superset-frontend:/app/superset-frontend
+      - superset_home:/app/superset_home
+      - ./tests:/app/tests
+      - superset_data:/app/data
+      - ./data_engineering_dashboard:/app/data_engineering_dashboard
+      # Use an anonymous volume to overlay and hide host node_modules
+      - /app/superset-frontend/node_modules
     networks:
       - superset_internal
 
