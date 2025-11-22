@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonVirtualenvOperator
+from scripts.iceberg_ingest_daily import ingest_iceberg_daily_isolated
 import os
 
 # env
@@ -44,72 +46,32 @@ with DAG(
         dag=dag,
     )
 
+    iceberg_bronze_ingest = PythonVirtualenvOperator(
+        task_id="ingest_iceberg_daily",
+        python_callable=ingest_iceberg_daily_isolated,
+        requirements=[
+            "pyiceberg[s3fs]>=0.7.0",
+            "pandas",
+            "pydantic>=2.0",
+            "pyarrow"
+        ],
+        system_site_packages=False,
+        dag=dag,
+    )
+
+    create_ch_iceberg_table = BashOperator(
+        task_id="create_ch_iceberg_table",
+        bash_command="python /opt/airflow/dags/scripts/create_clickhouse_iceberg_table.py",
+        env=base_env,
+        dag=dag,
+    )
+
     ingest_daily_data = BashOperator(
         task_id="ingest_daily_data",
         bash_command=f"python {SCRIPTS_DIR}/ingest_daily_data.py",
         env=base_env,
         dag=dag,
     )
-
-    #     load_analytics_daily_prices = BashOperator(
-    #         task_id="load_analytics_daily_prices",
-    #         bash_command=r'''
-    #           set -euo pipefail
-    #           cat <<'SQL' | curl -sS -u default: --data-binary @- "http://clickhouse:8123/?database=star_schema"
-    # ALTER TABLE star_schema.daily_stock_prices
-    # DELETE WHERE Date >= subtractDays(today(), 3)
-    # SQL
-    #           cat <<'SQL' | curl -sS -u default: --data-binary @- "http://clickhouse:8123/?database=star_schema"
-    # INSERT INTO star_schema.daily_stock_prices
-    # SELECT
-    #   toDate(date)        AS Date,
-    #   toString(ticker)    AS Ticker,
-    #   toFloat64(open)     AS Open,
-    #   toFloat64(high)     AS High,
-    #   toFloat64(low)      AS Low,
-    #   toFloat64(close)    AS Close,
-    #   toFloat64(close)    AS AdjClose,
-    #   toUInt64(volume)    AS Volume
-    # FROM sp600_stocks.daily_stock_data
-    # WHERE date >= subtractDays(today(), 3)
-    # SQL
-    #         ''',
-    #         env=base_env,
-    #         dag=dag,
-    #     )
-    #
-    #     load_index_membership = BashOperator(
-    #         task_id="load_index_membership",
-    #         bash_command=r'''
-    #           set -euo pipefail
-    #           # Delete ALL index membership data
-    #           cat <<'SQL' | curl -sS -u default: --data-binary @- "http://clickhouse:8123/?database=star_schema"
-    # ALTER TABLE star_schema.index_membership_snapshots DELETE WHERE 1=1
-    # SQL
-    #           # Load ALL SP500 membership
-    #           cat <<'SQL' | curl -sS -u default: --data-binary @- "http://clickhouse:8123/?database=star_schema"
-    # INSERT INTO star_schema.index_membership_snapshots
-    # SELECT
-    #   today() AS snapshot_date,
-    #   'sp500' AS index_name,
-    #   toString(symbol) AS Symbol,
-    #   now() AS ingested_at
-    # FROM sp600_stocks.sp500
-    # SQL
-    #           # Load ALL SP600 membership
-    #           cat <<'SQL' | curl -sS -u default: --data-binary @- "http://clickhouse:8123/?database=star_schema"
-    # INSERT INTO star_schema.index_membership_snapshots
-    # SELECT
-    #   today() AS snapshot_date,
-    #   'sp600' AS index_name,
-    #   toString(symbol) AS Symbol,
-    #   now() AS ingested_at
-    # FROM sp600_stocks.sp600
-    # SQL
-    #         ''',
-    #         env=base_env,
-    #         dag=dag,
-    #     )
 
     dbt_run = BashOperator(
         task_id="dbt_run",
@@ -118,5 +80,9 @@ with DAG(
         dag=dag,
     )
 
-    # Set dependencies
-    extract_components >> extract_daily_prices >> ingest_daily_data >> dbt_run
+    extract_components \
+    >> extract_daily_prices \
+    >> iceberg_bronze_ingest \
+    >> create_ch_iceberg_table \
+    >> ingest_daily_data \
+    >> dbt_run
