@@ -8,9 +8,9 @@ dbt/target
 # -------------------------------
 # DBT build artifacts
 # -------------------------------
-target/
-dbt_packages/
-logs/
+/target/
+/dbt_packages/
+/logs/
 manifest.json
 run_results.json
 sources.json
@@ -68,7 +68,6 @@ docker-compose.override.yml
 *.sock
 
 #Logs
-logs/**
 Docker/logs/
 dbt/logs/
 
