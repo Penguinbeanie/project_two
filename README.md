@@ -1,5 +1,3 @@
-OpenMetaData part is still WIP don't check just yet (will delete this when its done)
-
 # Project: Data Orchestration with Airflow, dbt, and ClickHouse
 
 This project implements an end-to-end data orchestration pipeline. It automates the process of extracting financial data, loading it into a data warehouse, and transforming it for analytics.
