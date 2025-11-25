@@ -15,6 +15,7 @@ services:
       - clickhouse_data:/var/lib/clickhouse
       - ./data:/var/lib/clickhouse/user_files
       - ./clickhouse_config:/etc/clickhouse-server/config.d
+      - ./clickhouse_config/users.xml:/etc/clickhouse-server/users.d/users.xml
       - ./clickhouse_init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "clickhouse-client --query='SELECT 1' || exit 1"]

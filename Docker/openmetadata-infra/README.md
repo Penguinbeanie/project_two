@@ -61,98 +61,27 @@
 
 ## 2. Start OpenMetadata Stack
 
-1. **Navigate to OpenMetadata directory:**
-   ```powershell
-   cd C:\Users\<your-username>\DA_project\project_two\openmetadata-infra
-   ```
-
-2. **Start all services:**
+1. **In the openmetadata-infra start up all services:**
    ```powershell
    docker-compose up -d
    ```
-
-3. **Verify all containers are running:**
-   ```powershell
-   docker ps
-   ```
-
    You should see these containers as **healthy**:
    - `openmetadata_server`
    - `openmetadata_elasticsearch`
    - `openmetadata_mysql`
-   - `openmetadata_clickhouse`
    - `openmetadata_ingestion`
 
-4. **Wait for OpenMetadata to be ready (~2-3 minutes):**
+2. **Wait for OpenMetadata to be ready (~2-3 minutes):**
    ```powershell
    docker logs -f openmetadata_server
    # Wait until you see: "OpenMetadata Server is up and running"
    ```
+---
 
-5. **Access OpenMetadata UI:**
-   - Open browser: http://localhost:8585
-   - Default login: `admin` / `admin` #this is to test that OpenMetadata UI is set up correctly
 
 ---
 
-## 3. Create ClickHouse Gold Tables with DBT
-
-### Install DBT (if not already installed)
-
-```powershell
-pip install dbt-clickhouse
-```
-
-### Set Environment Variables
-
-```powershell
-cd C:\Users\<your-username>\DA_project\project_two\Docker\dbt
-
-$env:CLICKHOUSE_HOST = "localhost"
-$env:CLICKHOUSE_USER = "default"
-$env:CLICKHOUSE_PASSWORD = "default"
-```
-
-### Run DBT to Create Gold Tables
-
-```powershell
-python -m dbt.cli.main run
-```
-
-**Expected output:**
-```
-Completed successfully
-Done. PASS=7 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=7
-```
-
-This creates the following gold layer tables in ClickHouse:
-- `dim_company` - Company dimension (SCD Type 2)
-- `dim_date` - Date dimension
-- `dim_exchange` - Exchange dimension (SCD Type 2)
-- `fact_stock_price` - Stock price facts
-
-### Verify Tables in ClickHouse
-
-```powershell
-docker exec -it openmetadata_clickhouse clickhouse-client --query "SHOW TABLES FROM sp600_stocks"
-```
-
-You should see:
-```
-company_details      (bronze/silver)
-daily_stock_data     (bronze/silver)
-exchanges            (bronze/silver)
-sp500                (bronze/silver)
-sp600                (bronze/silver)
-dim_company          (gold) 
-dim_date             (gold) 
-dim_exchange         (gold) 
-fact_stock_price     (gold) 
-```
-
----
-
-## 4. Connect ClickHouse to OpenMetadata
+## 3. Connect ClickHouse to OpenMetadata
 
 ### Create Dedicated OpenMetadata User (First Time Setup Only)
 
@@ -177,8 +106,6 @@ EXIT;
 
 **Option A: Service Already Exists (Most Common)**
 
-If the ClickHouse service has already been set up like we did (`openmetadata_p3`):
-
 1. Login to OpenMetadata: http://localhost:8585
    - Email: `admin@open-metadata.org`
    - Password: `admin`
@@ -187,7 +114,7 @@ If the ClickHouse service has already been set up like we did (`openmetadata_p3`
    - Settings → Services → Databases
    - Look for existing ClickHouse service (`openmetadata_p3`)
    - Service should be connected with these credentials:
-     - Host: `openmetadata_clickhouse:8132`
+     - Host: `clickhouse:8132`
      - Username: `service_openmetadata`
      - Password: `omd_very_secret_password`
      - Database: `sp600_stocks`
@@ -207,7 +134,7 @@ If no ClickHouse service exists:
 
 3. Configure Connection:
    - **Name:** `openmetadata_p3`
-   - **Host and Port:** `openmetadata_clickhouse:8132`
+   - **Host and Port:** `clickhouse:8132`
    - **Username:** `service_openmetadata`
    - **Password:** `omd_very_secret_password`
    - **Database:** `sp600_stocks`
@@ -228,21 +155,12 @@ If OpenMetadata has been set up correctly, gold tables should already be registe
 
 1. Login to OpenMetadata: http://localhost:8585
 
-2. Go to Explore:
-   - Click Explore in the left sidebar
+2. Go to Explore and search for gold tables:
+   - `dim_company`
+   - `dim_date`
+   - `dim_exchange`
+   - `fact_stock_price`
 
-3. Search for gold tables:
-   - Search: `dim_company`
-   - Search: `dim_date`
-   - Search: `dim_exchange`
-   - Search: `fact_stock_price`
-
-4. Verify table details:
-   - Click on any table to see:
-     - Schema/columns with descriptions
-     - Sample data
-     - Data quality tests (Quality tab)
-     - Lineage (Lineage tab)
 
 ### If Tables Are Missing: Run Metadata Ingestion
 
@@ -430,13 +348,90 @@ docker ps
 
 
 
-## 6. Run Data Quality Tests
+## 6. Data Quality Tests
 
-Data quality tests have already been configured in OpenMetadata. You just need to run them and view the results.
+### Creating Data Quality Tests (First Time Setup)
 
-### Configured Tests
+If data quality tests don't exist yet, here's how to create them:
 
-The following tests are already set up:
+#### Test 1: NOT NULL on Foreign Key (Fact Table)
+
+1. Navigate to fact table:
+   - Go to Explore → Search: `fact_stock_price`
+   - Click on the table
+
+2. Go to Quality tab:
+   - Click Quality tab
+   - Click + Add Test
+
+3. Configure test:
+   - **Test Level:** Column Level
+   - **Select Table:** `fact_stock_price` (should be pre-filled)
+   - **Select Column:** `CompanyID`
+   - **Select Test Type:** `Column Values To Be Not Null`
+   
+4. Test details:
+   - **Name:** `fact_stock_price_company_id_not_null`
+   - **Description:** `Ensures all records have a valid company reference`
+   - **Compute Row Count:** Leave unchecked (for better performance)
+
+5. Create Pipeline:
+   - **Pipeline Name:** `fact_stock_price_quality_tests`
+   - **Schedule:** Select On Demand (manual execution)
+   - **Enable Debug Log:** Leave unchecked
+   - **Raise on Error:** Keep enabled ✅
+   - Click Submit
+
+#### Test 2: UNIQUE on Surrogate Key (Dimension Table)
+
+1. Navigate to dimension table:
+   - Go to Explore → Search: `dim_company`
+   - Click on the table
+
+2. Add test:
+   - Quality tab → + Add Test
+
+3. Configure test:
+   - **Test Level:** Column Level
+   - **Select Column:** `company_id`
+   - **Select Test Type:** `Column Values To Be Unique`
+
+4. Test details:
+   - **Name:** `dim_company_id_unique`
+   - **Description:** `Ensures each company has a unique identifier, maintaining referential integrity in the dimension table`
+   - **Compute Row Count:** Leave unchecked
+
+5. Create Pipeline:
+   - **Pipeline Name:** `dim_company_quality_tests`
+   - **Schedule:** On Demand
+   - **Raise on Error:** Enabled ✅
+   - Click Submit
+
+#### Test 3: Range Check (Additional Test)
+
+1. Go back to fact table:
+   - Explore → `fact_stock_price`
+
+2. Add another test:
+   - Quality tab → + Add Test
+
+3. Configure range test:
+   - **Test Level:** Column Level
+   - **Select Column:** `Close`
+   - **Select Test Type:** `Column Values To Be Between`
+   - **Min Value:** `0`
+   - **Max Value:** `999999999` (or leave empty if allowed)
+
+4. Test details:
+   - **Name:** `fact_stock_price_close_positive`
+   - **Description:** `Validates that closing stock prices are positive values, ensuring data quality and preventing invalid or negative price entries`
+
+5. Use existing pipeline:
+   - Select the existing `fact_stock_price_quality_tests` pipeline
+   - Click Submit
+
+
+### Tests
 
 1. NOT NULL test on `CompanyID` foreign key in `fact_stock_price` table
 2. UNIQUE test on `company_id` surrogate key in `dim_company` table  
@@ -451,7 +446,7 @@ The following tests are already set up:
    - Go to Services → Databases
 
 2. Open your ClickHouse service:
-   - Click on your ClickHouse service (e.g., `openmetadata_p3` or `clickhouse_p3`)
+   - Click on your ClickHouse service (`openmetadata_p3`)
 
 3. Go to Agents/Ingestion tab:
    - Click Agents or Ingestion tab and go to Data Quality
