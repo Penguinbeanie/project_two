@@ -1,53 +1,254 @@
-## Docker Compose Services Overview
 
-This `docker-compose.yml` file defines several services that work together to run Apache Superset:
+# Apache Superset Practice
 
-*   **`nginx`**: A reverse proxy that routes external requests to the Superset web application. It handles incoming traffic and forwards it to the `superset` service.
-*   **`redis`**: A Redis instance used for caching and as a message broker for Celery tasks, improving Superset's performance and enabling asynchronous operations.
-*   **`db`**: A PostgreSQL database that serves as Superset's metadata repository, storing information about users, dashboards, charts, and data sources. It initializes data from scripts in `./docker/docker-entrypoint-initdb.d`.
-*   **`superset`**: The core Superset web application, running on Gunicorn. This is the primary service providing the Superset user interface and API.
-*   **`superset-websocket`**: A separate service for handling WebSocket communication within Superset, typically used for real-time updates.
-*   **`superset-init`**: This crucial service runs once during startup to initialize the Superset environment. It performs database migrations, creates an admin user, loads example data, and is responsible for **importing specified dashboards** (e.g., from the `./data_engineering_dashboard` volume mount). This service must complete successfully before other Superset components become fully operational.
-*   **`superset-node`**: Used for frontend development, compiling and serving the Superset UI.
-*   **`superset-worker`**: A Celery worker process that executes asynchronous and resource-intensive tasks, such as running long-running queries, generating reports, and performing data extracts.
-*   **`superset-worker-beat`**: The Celery Beat scheduler, responsible for triggering periodic tasks (e.g., scheduled reports, data refreshes) for the Celery workers.
-*   **`superset-tests-worker`**: An optional worker service specifically configured for running tests.
+## Table of contents
 
-### Dashboard Import During Initialization:
+- [Introduction and learning objectives](#introduction-and-learning-objectives)  
+- [Task 0: Start environment & sample data](#task-0-start-environment--sample-data)  
+- [Task 1: Connect Superset to ClickHouse](#task-1-connect-superset-to-clickhouse)  
+- [Task 2: Explore data with SQL Lab](#task-2-explore-data-with-sql-lab)  
+- [Task 3: Register datasets (table & SQL)](#task-3-register-datasets-table--sql)  
+- [Task 4: Build charts](#task-4-build-charts)  
+- [Task 5: Build a dashboard](#task-5-build-a-dashboard)  
+- [Appendix](#appendix)  
 
-The `superset-init` service plays a critical role in setting up your Superset instance. Its command, typically executing `/app/docker/docker-init.sh`, ensures that the database is properly migrated, an admin user is created, and any pre-configured dashboards or example datasets are imported. Notably, the volume mount `./data_engineering_dashboard:/app/data_engineering_dashboard` indicates that dashboards or other configuration files placed in your local `data_engineering_dashboard` directory will be available within the container at `/app/data_engineering_dashboard` and can be imported during this initialization step. This automates the setup of your analytical views and provides a consistent starting point for your Superset deployment.
+---
 
-## Docker Networks
+## Introduction and learning objectives
 
-This `docker-compose.yml` configuration utilizes two distinct networks for managing communication between services:
+In this practice session you will use **Apache Superset** as a BI / visualization tool on top of **ClickHouse**.
 
-*   **`superset_internal`**: This is an internal, user-defined bridge network created by Docker Compose. It facilitates secure communication between core Superset components such as `redis`, `db`, `superset`, `superset-websocket`, `superset-init`, `superset-node`, `superset-worker`, `superset-worker-beat`, and `superset-tests-worker`. Services within this network can communicate with each other using their service names.
+You will:
 
-*   **`shared-analytics-net`**: This is an external network, meaning it is expected to be pre-existing in your Docker environment (e.g., created manually or by another `docker-compose` setup). It is used to connect Superset's `nginx` reverse proxy, `superset` web application, `superset-init` process, and `superset-worker` and `superset-worker-beat` to a broader analytics infrastructure. This allows Superset to interact with other analytical tools or data sources without exposing all its internal components directly. The `nginx` service acts as an entry point, connecting to this external network and routing requests internally to Superset.
+- Connect Superset to the ClickHouse **`supermarket`** database  
+- Run SQL queries using **SQL Lab**  
+- Register **datasets** from:
+  - Existing tables (e.g. `FactSales`)
+  - Custom SQL (joins between fact & dimensions)  
+- Build a few **charts**  
+- Combine them into a simple **dashboard**
 
-To manage these networks, especially `shared-analytics-net`, ensure it is created before running this `docker-compose` file if it doesn't exist:
+> Timebox:  
+> - 10–15 min: introduction, environment setup  
+> - ~45–60 min: Tasks 1–5  
+> - _Optional_: Use time to work on Project 3 SuperSet integration.
+
+---
+
+## Task 0: Start environment & sample data
+
+### 0.1 Start Superset
+
+From the Superset project folder:
 
 ```bash
-docker network create shared-analytics-net
+docker compose up -d
 ```
 
-## Startup
+Then open Superset in your browser:
 
-First ensure that the network has been created (see above).
-Then ensure that the docker/compose.yml has been ran and the DAGs were activated once.
+- URL: http://localhost:8088  
+- Login: for now, use the default credentials ( `admin` / `admin`)
 
-Then, to start the services, navigate to the directory containing `docker-compose.yml` (e.g., `superset/`) and run:
+Make sure the UI loads and you can see the main Superset homepage.
 
+---
+
+### 0.2 Make sure ClickHouse and sample tables exist
+
+Include ClickHouse service in the docker compose file. You can use the sample below, or add your own ClickHouse container you are using in the project.  
+
+<details>  
+<summary>Example addition to compose.yml</summary>  
+
+### under services add
+  clickhouse-server-viz:
+    image: clickhouse/clickhouse-server
+    container_name: clickhouse-server-viz
+    environment:
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1 # https://clickhouse.com/docs/operations/settings/settings-users#access_management-user-setting
+      CLICKHOUSE_USER: admin
+      CLICKHOUSE_PASSWORD: admin_password
+
+    ports:
+      - "8123:8123" # HTTP interface
+      - "9000:9000" # Native client interface
+    volumes:
+      # NOTE: modify these paths as needed. E.g., you want to persist data somewhere else, you want to use your project data, etc.
+      # This persists our database data on our local machine.
+      - clickhouse-viz-data:/var/lib/clickhouse/ 
+      # mount SQL to run them via client
+      - ./sql:/sql
+      - ./sample_data:/var/lib/clickhouse/user_files
+    # Best practice from official docs to prevent "too many open files" errors.
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+### under volumes add
+
+  clickhouse-viz-data:
+
+</details>  
+
+If you want to use the practice session data, (re)load the sample schema inside the ClickHouse container using the sql and csv files under `./sql` and `./sample_data`.
+
+<details>  
+<summary>Example scripts to run</summary>  
 ```bash
-docker-compose up -d
+docker exec -it clickhouse-server-viz bash
+clickhouse-client --multiquery --queries-file=/sql/01_create_db_and_tables.sql  
+clickhouse-client --multiquery --queries-file=/sql/02_load_queries.sql 
+```
+</details>  
+
+
+### 0.3 Create a Superset service account
+
+Create a service account in ClickHouse for Superset application. It should have SELECT rights on supermarket schema.
+
+<details>
+<summary>Example solution</summary>  
+
+```
+CREATE ROLE role_superset_full;
+
+CREATE USER service_superset_full IDENTIFIED WITH sha256_password BY 'superset_very_secret_password';
+
+GRANT role_superset_full TO service_superset_full;
+
+GRANT SELECT ON supermarket.* TO role_superset_full;
+```  
+</details>
+
+---
+
+## Task 1: Connect Superset to ClickHouse
+
+1. In Superset, go to **Settings → Database connections**  
+
+2. Click **+ Database**
+
+3. Choose **ClickHouse Connect** as the database type  
+
+4. Use the credentials as you created them above
+
+---
+
+## Task 2: Explore data with SQL Lab
+
+Open **SQL → SQL Lab**.
+
+Run:
+
+```sql
+SELECT *
+FROM supermarket.FactSales
 ```
 
-Open http://localhost:8088 and enter the username: "admin" and password: "admin".
+More advanced example:
 
-(Optional) To connect Apache Superset to the Clickhouse database, use the following URI:
+```sql
+SELECT
+    d.FullDate,
+    p.Category,
+    SUM(f.SalesAmount) AS total_sales
+FROM supermarket.FactSales f
+JOIN supermarket.DimDate d
+    ON f.DateKey = d.DateKey
+JOIN supermarket.DimProduct p
+    ON f.ProductKey = p.ProductKey
+GROUP BY d.FullDate, p.Category
+ORDER BY d.FullDate, p.Category
+```
 
-  clickhousedb://default:default@clickhouse:8123/sp600_stocks
+---
 
-To load the existing dashboard, import the .zip found at:
-  "Docker/superset/data_engineering_dashboard/dashboard_export_20251120T153159.zip"
-When asked for the password, enter: "default"
+## Task 3: Register datasets (table & SQL)
+
+### 3.1 Dataset from table
+
+- Go to **Datasets → + Dataset**
+- Database: ClickHouse
+- Schema: `supermarket`
+- Table: `FactSales`
+- Save as **`FactSales`**
+
+### 3.2 Dataset from SQL
+
+Use:
+
+```sql
+SELECT
+    d.FullDate,
+    toStartOfMonth(d.FullDate) AS MonthStart,
+    s.Region,
+    p.Category,
+    SUM(f.SalesAmount) AS total_sales,
+    SUM(f.Quantity) AS total_quantity
+FROM supermarket.FactSales f
+JOIN supermarket.DimDate d ON f.DateKey = d.DateKey
+JOIN supermarket.DimStore s ON f.StoreKey = s.StoreKey
+JOIN supermarket.DimProduct p ON f.ProductKey = p.ProductKey
+GROUP BY d.FullDate, MonthStart, s.Region, p.Category
+ORDER BY MonthStart, s.Region, p.Category;
+```
+
+Save dataset as **`Sales_By_Date_Region_Category`** (Under Save (arrow) --> Save dataset).
+
+---
+
+## Task 4: Build charts
+
+### 4.1 Chart from FactSales
+
+- Visualization: Table / Big Number
+- Metric: `SUM(SalesAmount)`
+- Time column: `FullDate`
+- Save as **`Total Sales over Time (FactSales)`**
+
+### 4.2 Chart from SQL dataset
+
+Options:
+
+- Bar chart grouped by Region & Category  
+- Line chart by MonthStart  
+
+Save as **`Monthly Sales by Region and Category`**
+
+---
+
+## Task 5: Build a dashboard
+
+1. Go to **Dashboards → + Dashboard**
+2. Name: **Supermarket Overview**
+3. Add charts:
+   - Total Sales over Time (FactSales)
+   - Monthly Sales by Region and Category
+4. Arrange layout
+5. Add filters (optional)
+6. Save
+
+---
+
+## Appendix
+
+### Relevant documentation
+
+Connecting ClickHouse to Superset:  
+https://clickhouse.com/docs/integrations/superset 
+
+Enabling additional features in Superset:  
+https://superset.apache.org/docs/using-superset/exploring-data
+
+Security in Superset:  
+https://superset.apache.org/docs/security/
+
+### Role-based accesses
+
+For your project 3, you can do the following:  
+* Create two separate schemas and two separate users/roles in ClickHouse  
+* Create two connections in Superset, name them clearly to distinguish between full and limited access rights  
+* Create new roles, new users under the roles, and assign the connections to the specific roles in Superset (note: this is not mandatory for project 3, but recommended to go through so you understand the steps)  
+
