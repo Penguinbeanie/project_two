@@ -1,7 +1,7 @@
 from clickhouse_driver import Client
 
 def ensure_iceberg_table():
-    client = Client(host='clickhouse', database='default')
+    client = Client(host='clickhouse', user='default', password='default', database='default')
 
     client.execute("CREATE DATABASE IF NOT EXISTS iceberg_data")
 
