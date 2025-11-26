@@ -20,7 +20,7 @@ Then ensure that the docker/compose.yml has been ran and the DAGs were activated
 Then, to start the services, navigate to the directory containing `docker-compose.yml` (e.g., `superset/`) and run:
 
 ```bash
-docker-compose up -d
+docker compose -f superset_compose.yml up -d
 ```
 
 Open http://localhost:8088 and enter the username: "admin" and password: "admin".
