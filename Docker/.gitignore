@@ -71,5 +71,3 @@ docker-compose.override.yml
 Docker/logs/
 dbt/logs/
 
-# Pipeline outputs
-/data/
