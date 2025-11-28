@@ -45,10 +45,6 @@
 5. **Restart Docker Desktop**
 
 6. **Verify memory allocation:**
-   ```powershell
-   docker info | Select-String "Total Memory"
-   # Should show: Total Memory: ~11-12GiB
-   ```
 
 ### For Docker Desktop on Mac
 
@@ -78,9 +74,6 @@
    ```
 ---
 
-
----
-
 ## 3. Connect ClickHouse to OpenMetadata
 
 ### Create Dedicated OpenMetadata User (First Time Setup Only)
@@ -104,29 +97,14 @@ EXIT;
 
 ### Configure OpenMetadata Connection
 
-**Option A: Service Already Exists (Most Common)**
-
-1. Login to OpenMetadata: http://localhost:8585
+Login to OpenMetadata: http://localhost:8585
    - Email: `admin@open-metadata.org`
    - Password: `admin`
 
-2. Verify connection:
-   - Settings → Services → Databases
-   - Look for existing ClickHouse service (`openmetadata_p3`)
-   - Service should be connected with these credentials:
-     - Host: `clickhouse:8132`
-     - Username: `service_openmetadata`
-     - Password: `omd_very_secret_password`
-     - Database: `sp600_stocks`
-
-3. If service exists, you're done! Skip to Step 5.
-
-**Option B: Add New Service (If It Doesn't Exists)**
-
-If no ClickHouse service exists:
+**Add New Service**
 
 1. Navigate to Services:
-   - Click Settings (gear icon) → Services → Databases
+   - Click Settings → Services → Databases
 
 2. Add New Database Service:
    - Click **+ Add Service**
@@ -213,7 +191,7 @@ If you don't see the gold tables, the metadata hasn't been synced yet:
 
 ```powershell
 # Check if Elasticsearch is running
-docker ps | Select-String "elasticsearch"
+docker ps | grep "elasticsearch"
 
 # If not running, check logs
 docker logs openmetadata_elasticsearch
@@ -250,6 +228,7 @@ $env:CLICKHOUSE_PASSWORD = "default"
 
 ```powershell
 python -m dbt.cli.main run
+
 ```
 
 ### Missing Staging Tables Error
@@ -287,7 +266,7 @@ python -m dbt.cli.main run
 **Solution:** Elasticsearch is not running. Check container status:
 
 ```powershell
-docker ps -a | Select-String "elasticsearch"
+docker ps -a | grep "elasticsearch"
 
 # If not running:
 docker-compose up -d openmetadata_elasticsearch
@@ -345,10 +324,71 @@ docker ps
 | Airflow (if running) | 8080 | http://localhost:8080 |
 
 ---
+## 6. Table and column descriptions for fact and dimension tables
+You can go to the specific table and add the description and column descriptions there.
 
+### Fact table 
+The FactStockPrice table contains the measured daily stock metrics (High, Low, Open, Close, Volume) linked to the relevant dimensions via foreign keys. It is the central table used for analysis and reporting.
 
+- SurrogateID: Unique identifier for each record in the fact table.
+- DateID: Foreign key linking to the DimDate table. This is a surrogate key and does not map to a specific column in the source data.
+- CompanyID: Foreign key linking to the DimCompany table. This is a surrogate key and does not map to a specific column in the source data.
+- ExchangeID: Foreign key linking to the DimExchange table. This is a surrogate key and does not map to a specific column in the source data.
+- High: Highest price of the stock for the day.
+- Low: Lowest price of the stock for the day.
+- Open: Opening price of the stock for the day.
+- Close: Closing price of the stock for the day.
+- Volume: Number of shares traded during the day.
+- Trade_date: Date of the stock trade transaction.
 
-## 6. Data Quality Tests
+### Dimensions tables
+
+#### dim_date table
+The dim_date table stores calendar-based attributes like year, month, day, and quarter for time-based analysis.
+
+- DateID: Unique identifier for each date. This is a surrogate key and does not map to a specific column in the source data.
+- FullDate: The full date.
+- Year: The year component of the date.
+- Month: The month component of the date.
+- Day: The day component of the date.
+- DayOfWeek: The day of the week.
+- Quarter: The quarter of the year.
+
+### dim_exchange table
+The dim_exchange table stores details about the stock exchanges where trading occurs, identified by their Market Identifier Code (MIC), managing changes over time using Type 2 SCD with ValidFrom and ValidTo dates.
+
+- ExchangeID: Unique identifier for each exchange. This is a surrogate key and does not map to a specific column in the source data.
+- ExchangeCode: The symbol or name of the stock exchange.
+- ExchangeTimezone: The timezone where the exchange is located.
+- MIC: Market Identifier Code (MIC) is a unique identification code for exchanges.
+- ExRegion: The region where the exchange is located.
+- ExCity: The city where the exchange is located.
+- MarketCap: The market capitalization in USD.
+- MonthlyTradeVolume_USD: The monthly trading volume in USD.
+- OpenHours_Open: The UTC open time during winter months.
+- OpenHours_Close: The UTC close time during winter months.
+- IsCurrent: A boolean indicating if the record is current.
+- ValidFrom: The start date of the validity of the record.
+- ValidTo: The end date of the validity of the record.
+
+### dim_company table
+The dim_company table stores descriptive information about the companies, including their symbol, sector, and industry classification, managing changes over time using Type 2 SCD with ValidFrom and ValidTo dates.
+
+- CompanyID: Unique identifier for each company. This is a surrogate key and does not map to a specific column in the source data.
+- Symbol: The stock ticker symbol.
+- CompanyName: The legal name of the company.
+- HeadquartersCountry: The country of the company's headquarters.
+- WebsiteURL: The official website URL of the company.
+- Sector: The economic sector the company operates in.
+- Industry: The specific industry the company operates in.
+- EmployeeCount: The number of employees at the company.
+- ExchangeCode: The symbol or name of the stock exchange.
+- ValidFrom: The start date of the validity of the record.
+- ValidTo: The end date of the validity of the record.
+- IsCurrent: A boolean indicating if the record is current.
+
+---
+## 7. Data Quality Tests
 
 ### Creating Data Quality Tests (First Time Setup)
 
@@ -379,7 +419,7 @@ If data quality tests don't exist yet, here's how to create them:
    - **Pipeline Name:** `fact_stock_price_quality_tests`
    - **Schedule:** Select On Demand (manual execution)
    - **Enable Debug Log:** Leave unchecked
-   - **Raise on Error:** Keep enabled ✅
+   - **Raise on Error:** Keep enabled 
    - Click Submit
 
 #### Test 2: UNIQUE on Surrogate Key (Dimension Table)
@@ -406,6 +446,7 @@ If data quality tests don't exist yet, here's how to create them:
    - **Schedule:** On Demand
    - **Raise on Error:** Enabled ✅
    - Click Submit
+
 
 #### Test 3: Range Check (Additional Test)
 
@@ -434,8 +475,33 @@ If data quality tests don't exist yet, here's how to create them:
 ### Tests
 
 1. NOT NULL test on `CompanyID` foreign key in `fact_stock_price` table
+Why this is important:
+- CompanyID is a foreign key that references the dim_company table
+- If it's NULL, we cannot join stock prices to companies
+- NULL values would break JOINs and make data lineage tracking impossible
+- Referential integrity requires that every fact record must be associated with a dimension
+Business logic: Every stock price must belong to a specific company - a stock price without a company is unusable.
+
 2. UNIQUE test on `company_id` surrogate key in `dim_company` table  
+Why this is important:
+- company_id is the primary key and must be unique
+- Duplicates would cause:
+    - Incorrect JOINs (one company matching multiple times)
+    - Distorted aggregations (same company counted multiple times)
+    - Data duplication in downstream tables
+- In SCD Type 2 context, each version must be uniquely identifiable
+Business logic: Each company must be uniquely identifiable to avoid double-counting in analytics.
+
 3. RANGE test on `Close` price in `fact_stock_price` table (validates positive values)
+Why this is important:
+- Stock closing price cannot be negative or zero
+- Negative prices would indicate data quality issues:
+    - API errors
+    - ETL transformation bugs
+    - Source data corruption
+- Protects downstream analytics from invalid values (e.g., average price, returns calculations)
+Business logic: Stock prices must be positive numbers - negative or zero prices are financially impossible and would invalidate financial analyses.
+
 
 ### How to Run Data Quality Tests
 
@@ -521,7 +587,7 @@ If a test fails:
 - Or create it manually: Agents tab → Add Pipeline → Data Quality
 
 **"Test execution failed with connection error":**
-- Verify ClickHouse is running: `docker ps | Select-String "clickhouse"`
+- Verify ClickHouse is running: `docker ps | grep "clickhouse"`
 - Check OpenMetadata can connect: Settings → Services → Test Connection
 
 **"Tests never finish running":**
@@ -533,6 +599,127 @@ If a test fails:
 - Refresh the page
 - Clear browser cache
 - Check if test pipeline completed successfully
+
+---
+## 8. Superset integration and adding dashboards
+
+### Prerequisites
+- Superset 4.0.2 (NOT 5.0+, due to JWT auth incompatibility)
+- OpenMetadata 1.10.7
+- Both running in same Docker network
+
+### Step 1: Configure Superset Connection
+
+1. Navigate to **OpenMetadata UI** → **Settings** → **Services** → **Dashboards**
+2. Click **+ Add Service**
+3. Select **Superset** as the service type
+4. Configure the connection:
+
+   | Field | Value |
+   |-------|-------|
+   | **Host and Port** | `http://superset_app:8088` |
+   | **Username** | `admin` |
+   | **Password** | `admin` |
+   | **Provider** | `db` |
+   | **Verify SSL** | `no-ssl` |
+
+   > **Note**: Use the Docker container name (`superset_app`), not `localhost`
+
+5. Click **Test Connection**
+   - Should pass all 3 tests: CheckAccess, GetDashboards, GetCharts
+6. Click **Next** 
+7. After creating the service, navigate to the **Set Default Filters** tab 
+   - **Dashboard Filter Pattern**: Leave empty or set to `.*` (include all)
+   - **Chart Filter Pattern**: Leave empty or set to `.*` (include all)
+8. Click **Save**
+
+## Step 2: Set Up Metadata Ingestion
+Go to the **Metadata Agent** tab and click on the three dots -> **Run**
+
+## Step 3: Verify Dashboard Import
+
+### Check Ingestion Logs
+
+Navigate to **Metadata Agents** tab and view the logs. You should see:
+```
+Workflow Superset Summary:
+Processed records: X (should be > 0)
+Filtered: 0 (should be 0)
+Errors: 0
+Success %: 100.0
+```
+
+### View Imported Dashboards
+
+1. Go to **Dashboards** in OpenMetadata
+2. Locate your imported dashboard
+3. Click to view details
+4. The **Charts** section should display all charts from the dashboard
+
+## Troubleshooting
+
+### Issue: Charts Not Appearing (`Filtered: 1`)
+
+**Cause**: Dashboard is not published in Superset
+
+**Solution**:
+1. Open Superset → Navigate to your dashboard
+2. Click **⋮** (three dots) → **Edit properties**
+3. Check the **Published** checkbox
+4. Click **Save**
+5. Re-run ingestion in OpenMetadata
+
+### Issue: No Dashboards Found (`Processed records: 0`)
+
+**Cause**: Restrictive filter patterns in ingestion configuration
+
+**Solution**:
+1. Edit ingestion configuration in OpenMetadata
+2. Navigate to **Filter Pattern** section
+3. Ensure patterns are set to include all:
+```yaml
+   dashboardFilterPattern:
+     includes:
+       - ".*"
+```
+4. Save and re-run ingestion
+
+### Issue: JWT Authentication Error
+
+**Cause**: Using Superset 5.0+ which requires JWT authentication (not supported by OpenMetadata 1.10.7)
+
+**Solution**: Downgrade to Superset 4.0.2
+
+1. Update `docker-compose.yml` or `superset_compose.yml`:
+```yaml
+   x-superset-image: &superset-image apachesuperset.docker.scarf.sh/apache/superset:4.0.2
+```
+2. Stop and remove existing Superset containers:
+```bash
+   docker compose down
+   docker volume rm superset_db_home superset_redis
+```
+3. Restart Superset:
+```bash
+   docker compose up -d
+```
+
+### Issue: Connection Test Fails
+
+**Possible causes and solutions**:
+
+- **Using `localhost` instead of container name**
+  - Use `http://superset_app:8088` instead of `http://localhost:8088`
+
+- **Services not in same Docker network**
+  - Verify both containers are in the same network:
+```bash
+    docker network inspect 
+```
+
+- **Incorrect credentials**
+  - Verify username/password in Superset
+  - Default is typically `admin/admin`
 
 ---
 
