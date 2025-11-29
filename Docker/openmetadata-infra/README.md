@@ -58,7 +58,10 @@
 ## 2. Start OpenMetadata Stack
 
 1. **In the openmetadata-infra start up all services:**
+First ensure that the network has been created (see above). Then ensure that the docker/compose.yml has been ran and the DAGs were activated once.
+Then, to start the services, navigate to the directory containing docker-compose.yml (/openmetadata-infra) and run:
    ```powershell
+   docker network create shared-analytics-net
    docker-compose up -d
    ```
    You should see these containers as **healthy**:
@@ -88,11 +91,36 @@ docker exec -it openmetadata_clickhouse clickhouse-client --user default --passw
 CREATE ROLE role_openmetadata;
 CREATE USER service_openmetadata IDENTIFIED WITH sha256_password BY 'omd_very_secret_password';
 GRANT role_openmetadata TO service_openmetadata;
-GRANT SELECT, SHOW ON system.* TO role_openmetadata;
+GRANT SELECT ON system.* TO role_openmetadata;
+GRANT SHOW ON system.* TO role_openmetadata;
 GRANT SELECT ON sp600_stocks.* TO role_openmetadata;
 
+You can control with this:
+SHOW GRANTS FOR service_openmetadata;
+
 # Exit ClickHouse client
-EXIT;
+exit
+```
+Test user:
+```
+docker exec -it clickhouse clickhouse-client --user service_openmetadata --password omd_very_secret_password --query "SHOW DATABASES"
+```
+Test data reading:
+```
+docker exec -it clickhouse clickhouse-client --user service_openmetadata --password omd_very_secret_password --query "SELECT count(*) FROM sp600_stocks.fact_stock_price"
+```
+### Adding the gold tables
+
+Navigate to your dbt project directory and then run this command:
+```
+docker run -it --network shared-analytics-net -v ${PWD}:/app -w /app --rm python:3.11-slim bash -c "
+pip install dbt-core dbt-clickhouse && 
+dbt run
+"
+```
+Control if the tables were created:
+```
+docker exec -it clickhouse clickhouse-client --user default --password default --query "SHOW TABLES FROM sp600_stocks"
 ```
 
 ### Configure OpenMetadata Connection
@@ -112,7 +140,7 @@ Login to OpenMetadata: http://localhost:8585
 
 3. Configure Connection:
    - **Name:** `openmetadata_p3`
-   - **Host and Port:** `clickhouse:8132`
+   - **Host and Port:** `clickhouse:8123`
    - **Username:** `service_openmetadata`
    - **Password:** `omd_very_secret_password`
    - **Database:** `sp600_stocks`
@@ -131,9 +159,7 @@ If OpenMetadata has been set up correctly, gold tables should already be registe
 
 ### Check if Tables Are Registered
 
-1. Login to OpenMetadata: http://localhost:8585
-
-2. Go to Explore and search for gold tables:
+1. Go to Explore and search for gold tables:
    - `dim_company`
    - `dim_date`
    - `dim_exchange`
