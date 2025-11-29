@@ -643,7 +643,7 @@ If a test fails:
 
    | Field | Value |
    |-------|-------|
-   | **Host and Port** | `http://superset_app:8088` |
+   | **Host and Port** | `http://superset_app:8088` or `http://superset:8088`|
    | **Username** | `admin` |
    | **Password** | `admin` |
    | **Provider** | `db` |
