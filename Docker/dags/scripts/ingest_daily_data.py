@@ -14,7 +14,7 @@ def create_client():
                 host='clickhouse',
                 port=9000,
                 user='default',
-                password='',
+                password='default',
                 database='sp600_stocks'
             )
             client.execute("SELECT 1")
@@ -165,7 +165,7 @@ def ingest_sp600_components(client):
             (symbol, company, gics_sector, gics_sub_industry, headquarters_location, sec_filings, cik, ingestion_date)
         SELECT
             toString(Symbol),
-            toString(Company),
+            toString(Security),
             toString(`GICS Sector`),
             toString(`GICS Sub-Industry`),
             toString(`Headquarters Location`),

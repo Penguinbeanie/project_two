@@ -14,7 +14,7 @@ def create_client():
                 host='clickhouse',
                 port=9000,
                 user='default',
-                password='',
+                password='default',
                 database='sp600_stocks'
             )
             client.execute("SELECT 1")
@@ -131,4 +131,5 @@ if __name__ == "__main__":
     ingest_monthly_company_overview(client)
     ingest_monthly_exchange_data(client)
     
+
     print("=== Monthly ingestion cycle complete ===")

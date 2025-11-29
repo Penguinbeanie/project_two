@@ -14,10 +14,8 @@ models:
       - not_null:
           column_name: volume
       - relationships:
-          arguments:
-            to: ref('dim_company')
-            field: company_id
+          to: ref('dim_company')
+          field: company_id
       - relationships:
-          arguments:
-            to: ref('dim_exchange')
-            field: exchange_id
+          to: ref('dim_exchange')
+          field: exchange_id
