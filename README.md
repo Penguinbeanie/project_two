@@ -385,7 +385,7 @@ This section provides a brief overview of the key components located in the `Doc
 
 #### MinIO Data (`minio_data`)
 
-This directory serves as the persistent storage volume for the MinIO service. MinIO is an object storage server, and in this project, it is used to store data, particularly for the Iceberg data lakehouse tables. The contents are primarily binary data and system files managed by MinIO.
+This directory serves as the persistent storage volume for the MinIO service. MinIO is an object storage server, and in this project, it is used to store data, particularly for the Iceberg data lakehouse tables.
 
 #### ClickHouse Views (`views`)
 
