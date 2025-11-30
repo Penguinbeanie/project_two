@@ -361,21 +361,22 @@ LIMIT 10;
 
     Once the services are running, open your web browser and navigate to:
     [http://localhost:8080](http://localhost:8080)
+    It might take 1-2 minutes after the container started before the UI can actually be accessed.
 
     Log in with the default credentials:
     -   **Username:** `admin`
     -   **Password:** `admin`
 
-5.  **Run the Pipelines**
+6.  **Run the Pipelines**
 
     In the Airflow UI, you will see two DAGs.
 
     -   First, enable the `daily_market_etl` DAG and wait for it to complete.
     -   Then (when the first DAG has finished), enable the `monthly_reference_etl` DAG.
 
-6. Follow the instructions in Docker/superset/README.md
+7. Follow the instructions in Docker/superset/README.md
 
-7. Follow the instructions in Docker/openmetadata-infra/README.md
+8. Follow the instructions in Docker/openmetadata-infra/README.md
 
 ## Project Components Summary
 
