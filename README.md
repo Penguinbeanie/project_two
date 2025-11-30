@@ -361,6 +361,7 @@ LIMIT 10;
 
     Once the services are running, open your web browser and navigate to:
     [http://localhost:8080](http://localhost:8080)
+    
     It might take 1-2 minutes after the container started before the UI can actually be accessed.
 
     Log in with the default credentials:
