@@ -371,7 +371,7 @@ LIMIT 10;
     In the Airflow UI, you will see two DAGs.
 
     -   First, enable the `daily_market_etl` DAG and wait for it to complete.
-    -   Then, enable the `monthly_reference_etl` DAG.
+    -   Then (when the first DAG has finished), enable the `monthly_reference_etl` DAG.
 
 6. Follow the instructions in Docker/superset/README.md
 
