@@ -31,7 +31,7 @@ Open http://localhost:8088 and enter the username: "admin" and password: "admin"
 
 To load the existing dashboard, click on "Dashboard", then on "Import Dashboards". Use the .zip found at:
 
-    "Docker/superset/dashboards/dashboard_export_20251126T225307.zip"
+    "Docker/superset/dashboards/new_dashboard_export_20251130T041658.zip"
 
 When asked for the password, enter: "default"
 
