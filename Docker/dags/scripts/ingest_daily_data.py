@@ -14,7 +14,7 @@ def create_client():
                 host='clickhouse',
                 port=9000,
                 user='default',
-                password='',
+                password='default',
                 database='sp600_stocks'
             )
             client.execute("SELECT 1")

@@ -1,5 +1,7 @@
 # Project: Data Orchestration with Airflow, dbt, and ClickHouse
 
+# Part 2 (see Part 3 below)
+
 This project implements an end-to-end data orchestration pipeline. It automates the process of extracting financial data, loading it into a data warehouse, and transforming it for analytics.
 
 The pipeline leverages the following stack:
@@ -335,3 +337,77 @@ LIMIT 10;
 | CSG Systems International, Inc. | Technology | 49.80 | 63.36 | 27.22 |
 | Privia Health Group, Inc. | Healthcare | 19.64 | 24.96 | 27.09 |
 | Dana Incorporated | Consumer Cyclical | 11.06 | 14.00 | 26.58 |
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+# Part 3
+
+## Quickstart (including Part 2)
+
+1. **Create a Docker Network**
+
+    ```bash
+    docker network create shared-analytics-net
+    ```
+
+2. **Ensure you are in the project_two/Docker directory**
+
+3. **Start the main compose file:**
+
+    ```bash
+    docker compose up -d
+    ```
+4.  **Access the Airflow UI**
+
+    Once the services are running, open your web browser and navigate to:
+    [http://localhost:8080](http://localhost:8080)
+    
+    It might take 1-2 minutes after the container started before the UI can actually be accessed.
+
+    Log in with the default credentials:
+    -   **Username:** `admin`
+    -   **Password:** `admin`
+
+6.  **Run the Pipelines**
+
+    In the Airflow UI, you will see two DAGs.
+
+    -   First, enable the `daily_market_etl` DAG and wait for it to complete.
+    -   Then (when the first DAG has finished), enable the `monthly_reference_etl` DAG.
+
+7. Follow the instructions in Docker/superset/README.md
+
+8. Follow the instructions in Docker/openmetadata-infra/README.md
+
+## Project Components Summary
+
+This section provides a brief overview of the key components located in the `Docker` directory.
+
+#### MinIO Data (`minio_data`)
+
+This directory serves as the persistent storage volume for the MinIO service. MinIO is an object storage server, and in this project, it is used to store data, particularly for the Iceberg data lakehouse tables.
+
+#### ClickHouse Views (`views`)
+
+This directory contains SQL scripts for managing access control and creating analytical views in the ClickHouse database.
+
+*   **Role-Based Access Control (RBAC):** The scripts `01_create_roles_and_users.sql` define two roles (`analyst_full` and `analyst_limited`) with different levels of permissions.
+*   **Column-Level Security:** The `analyst_limited` role has restricted access to sensitive columns in the `dim_company` table.
+*   **Data Pseudonymization:** For the `analyst_limited` role, the `02_create_analytical_views.sql` script creates views that provide pseudonymized data for sensitive columns (e.g., masking company names and URLs).
+*   **Cleanup:** The `00_cleanup.sql` script is provided to drop the created users, roles, and views.
+*   **README:** The `README.md` inside the "views" directory provides further information on how to set up the roles.
+
+#### Apache Superset (`superset`)
+
+This directory contains the necessary files to run Apache Superset, a data visualization and business intelligence platform.
+
+*   **Docker Compose:** The `superset_compose.yml` file defines the services required to run Superset, including the Superset application itself, a PostgreSQL database for its metadata, and Redis for caching.
+*   **Configuration:** The `docker/pythonpath_dev/superset_config.py` file contains the Python configuration for the Superset application, where database connections and other settings are defined.
+*   **README:** The `README.md` in the "superset" directory provides instructions on how to start the Superset services and connect to the ClickHouse database.
+
+#### OpenMetadata Infrastructure (`openmetadata-infra`)
+
+This directory contains the infrastructure setup for OpenMetadata, a data discovery, lineage, and governance tool.
+
+*   **Docker Compose:** The `docker-compose.yml` file orchestrates the deployment of OpenMetadata along with its dependencies, including MySQL for metadata storage and Elasticsearch for search.
+*   **Setup and Integration:** The `README.md` in the "openmetadata-infra" directory provides detailed information on how to set everything up, how to connect it to Clickhouse and Superset, and on the general architecture.

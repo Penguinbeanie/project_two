@@ -1,4 +1,4 @@
-version: "3.9"
+﻿version: "3.9"
 
 services:
   minio:
@@ -13,6 +13,8 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - ./minio_data:/data
+    networks:
+      - shared-analytics-net
 
   iceberg_rest:
     image: tabulario/iceberg-rest:1.6.0
@@ -32,6 +34,8 @@ services:
       AWS_S3_PATH_STYLE_ACCESS: "true"
     depends_on:
       - minio
+    networks:
+      - shared-analytics-net
   clickhouse:
     image: clickhouse/clickhouse-server:24.8-alpine # newer version of clickhouse
     container_name: clickhouse
@@ -40,6 +44,8 @@ services:
       - "9000:9000"  # Native interface
     environment:
       CLICKHOUSE_DB: sp600_stocks
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: default
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./data:/var/lib/clickhouse/user_files
@@ -48,11 +54,13 @@ services:
       - ./clickhouse_users:/etc/clickhouse-server/users.d   # added admin
 
     healthcheck:
-      test: ["CMD-SHELL", "clickhouse-client --query='SELECT 1' || exit 1"]
+      test: ["CMD-SHELL", "clickhouse-client --user default --password 'default' --query='SELECT 1' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 30s
+    networks:
+      - shared-analytics-net
 
   postgres:
     image: postgres:13
@@ -69,6 +77,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    networks:
+      - shared-analytics-net
 
   airflow-webserver:
     build:
@@ -111,6 +121,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    networks:
+      - shared-analytics-net
 
   airflow-scheduler:
     build:
@@ -144,7 +156,12 @@ services:
       - ./data:/opt/airflow/data
       - ./dbt:/opt/airflow/dbt
       - ./clickhouse_init:/clickhouse_init
-
+    networks:
+      - shared-analytics-net
 volumes:
   clickhouse_data:
   postgres_data:
+
+networks:
+  shared-analytics-net:
+    external: true
