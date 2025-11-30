@@ -15,9 +15,9 @@ docker network create shared-analytics-net
 ## Startup
 
 First ensure that the network has been created (see above).
-Then ensure that the docker/compose.yml has been ran and the DAGs were activated once.
+Then ensure that the docker/compose.yml has been ran and both DAGs were activated once (sequentially, first let the "daily_market_etl" finish before starting the second DAG).
 
-Then, to start the services, navigate to the directory containing `docker-compose.yml` (e.g., `superset/`) and run:
+Then, to start the services, navigate to the directory containing `superset_compose.yml` (`superset/`) and run:
 
 ```bash
 docker compose -f superset_compose.yml up -d
@@ -27,8 +27,10 @@ Open http://localhost:8088 and enter the username: "admin" and password: "admin"
 
 (Optional) To connect Apache Superset to the Clickhouse database, use the following URI:
 
-  clickhousedb://default:default@clickhouse:8123/sp600_stocks
+    "clickhousedb://default:default@clickhouse:8123/sp600_stocks"
 
-To load the existing dashboard, import the .zip found at:
-  "Docker/superset/dashboards/dashboard_export_20251126T225307.zip"
+To load the existing dashboard, click on "Dashboard", then on "Import Dashboards". Use the .zip found at:
+
+    "Docker/superset/dashboards/dashboard_export_20251126T225307.zip"
+
 When asked for the password, enter: "default"
