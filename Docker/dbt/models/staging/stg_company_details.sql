@@ -1,6 +1,6 @@
 {{ config(materialized='view') }}
 
-SELECT
+SELECT DISTINCT
     symbol,
     company_name,
     sector,

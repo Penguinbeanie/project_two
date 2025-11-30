@@ -1,12 +1,12 @@
 clickhouse:
   outputs:
     dev:
-      host: clickhouse
-      password: default
+      host: "{{ env_var('CLICKHOUSE_HOST', 'clickhouse') }}"
+      password: "{{ env_var('CLICKHOUSE_PASSWORD', 'default') }}"
       port: 9000
       schema: sp600_stocks
       secure: false
       type: clickhouse
-      user: default
+      user: "{{ env_var('CLICKHOUSE_USER', 'default') }}"
       verify: false
   target: dev
