@@ -372,7 +372,7 @@ LIMIT 10;
 
     In the Airflow UI, you will see two DAGs.
 
-    -   First, enable the `daily_market_etl` DAG and wait for it to complete.
+    -   First, enable the `daily_market_etl` DAG and **wait for it to complete**.
     -   Then (when the first DAG has finished), enable the `monthly_reference_etl` DAG.
 
 7. Follow the instructions in Docker/superset/README.md
@@ -383,9 +383,7 @@ LIMIT 10;
 
 This section provides a brief overview of the key components located in the `Docker` directory.
 
-#### MinIO Data (`minio_data`)
-
-This directory serves as the persistent storage volume for the MinIO service. MinIO is an object storage server, and in this project, it is used to store data, particularly for the Iceberg data lakehouse tables.
+---
 
 #### ClickHouse Views (`views`)
 
@@ -397,6 +395,8 @@ This directory contains SQL scripts for managing access control and creating ana
 *   **Cleanup:** The `00_cleanup.sql` script is provided to drop the created users, roles, and views.
 *   **README:** The `README.md` inside the "views" directory provides further information on how to set up the roles.
 
+---
+
 #### Apache Superset (`superset`)
 
 This directory contains the necessary files to run Apache Superset, a data visualization and business intelligence platform.
@@ -405,9 +405,56 @@ This directory contains the necessary files to run Apache Superset, a data visua
 *   **Configuration:** The `docker/pythonpath_dev/superset_config.py` file contains the Python configuration for the Superset application, where database connections and other settings are defined.
 *   **README:** The `README.md` in the "superset" directory provides instructions on how to start the Superset services and connect to the ClickHouse database.
 
+---
+
 #### OpenMetadata Infrastructure (`openmetadata-infra`)
 
 This directory contains the infrastructure setup for OpenMetadata, a data discovery, lineage, and governance tool.
 
 *   **Docker Compose:** The `docker-compose.yml` file orchestrates the deployment of OpenMetadata along with its dependencies, including MySQL for metadata storage and Elasticsearch for search.
 *   **Setup and Integration:** The `README.md` in the "openmetadata-infra" directory provides detailed information on how to set everything up, how to connect it to Clickhouse and Superset, and on the general architecture.
+
+---
+
+#### Iceberg Data Lakehouse (`iceberg_data`)
+This task introduces **Apache Iceberg** as the bronze/landing layer for daily market data and exposes the Iceberg table as **read-only in ClickHouse** for downstream analytics.
+
+- **`ingest_iceberg_daily.py`**  
+  Loads daily stock CSV exports, ensures the Iceberg namespace/table exists, and appends new rows using **PyIceberg** with MinIO as the object store.
+
+- **`create_clickhouse_iceberg_table.py`**  
+  Creates a ClickHouse table backed by the same Iceberg metadata, enabling SQL access to the bronze dataset directly from ClickHouse.
+
+- **Airflow DAG: `daily_market_etl.py`**  
+  Orchestrates the full ETL:  
+  1. Extract SP500/SP600 components  
+  2. Extract daily stock prices  
+  3. Ingest bronze data into Iceberg  
+  4. Register Iceberg table in ClickHouse  
+  5. Run additional ingestion tasks  
+  6. Execute dbt models  
+
+This fulfills the requirement to **populate an Iceberg table via Airflow** and make the data **queriable through ClickHouse**.
+
+
+> ⚠️ **IMPORTANT — READ BEFORE PROCEEDING**
+>
+> **Follow the Quickstart steps up to _step 6_ before running the Iceberg test below.**
+>
+> This ensures Airflow, ClickHouse, MinIO and Iceberg metadata are initialized correctly.
+
+**Testing: Query Iceberg Data Through ClickHouse**
+
+To open an interactive SQL session against the Iceberg-backed ClickHouse table, run:
+
+```bash
+docker exec -it clickhouse clickhouse-client
+```
+
+Then execute a sample query:
+
+```sql
+SELECT *
+FROM iceberg_data.stock_bronze
+LIMIT 10;
+```
