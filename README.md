@@ -393,7 +393,7 @@ This directory contains SQL scripts for managing access control and creating ana
 *   **Column-Level Security:** The `analyst_limited` role has restricted access to sensitive columns in the `dim_company` table.
 *   **Data Pseudonymization:** For the `analyst_limited` role, the `02_create_analytical_views.sql` script creates views that provide pseudonymized data for sensitive columns (e.g., masking company names and URLs).
 *   **Cleanup:** The `00_cleanup.sql` script is provided to drop the created users, roles, and views.
-*   ****README:** The `README.md` inside the "views" directory provides further information.
+*   **README:** The `README.md` inside the "views" directory provides further information on how to set up the roles.
 
 #### Apache Superset (`superset`)
 
