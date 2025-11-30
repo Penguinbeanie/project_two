@@ -34,3 +34,8 @@ To load the existing dashboard, click on "Dashboard", then on "Import Dashboards
     "Docker/superset/dashboards/dashboard_export_20251126T225307.zip"
 
 When asked for the password, enter: "default"
+
+## Screenshot
+
+![Dashboard](https://github.com/Penguinbeanie/project_two/blob/master/Docker/superset/dashboards/img.png)
+
