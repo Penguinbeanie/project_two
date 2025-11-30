@@ -528,6 +528,9 @@ Why this is important:
 - Protects downstream analytics from invalid values (e.g., average price, returns calculations)
 Business logic: Stock prices must be positive numbers - negative or zero prices are financially impossible and would invalidate financial analyses.
 
+<img width="836" height="245" alt="data_quality tests" src="https://github.com/user-attachments/assets/cb64ad92-8c10-4cc8-a0dc-e11bb45f8e49" />
+
+
 
 ### How to Run Data Quality Tests
 
@@ -681,6 +684,10 @@ Success %: 100.0
 2. Locate your imported dashboard
 3. Click to view details
 4. The **Charts** section should display all charts from the dashboard
+
+<img width="617" height="360" alt="superset_charts_omd" src="https://github.com/user-attachments/assets/a1e17159-1d4b-41e6-9919-a05e03bfb034" />
+<img width="776" height="320" alt="omd-superset-data models" src="https://github.com/user-attachments/assets/1a17532c-eadc-425b-959d-29dd7e01ae9e" />
+
 
 ## Troubleshooting
 
